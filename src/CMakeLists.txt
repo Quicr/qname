@@ -1,6 +1,6 @@
 add_library(qname
-            quicr_name.cpp
-            quicr_namespace.cpp)
+            name.cpp
+            namespace.cpp)
 
 target_compile_options(qname
     PRIVATE
