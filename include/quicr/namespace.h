@@ -2,6 +2,7 @@
 
 #include <quicr/name.h>
 
+#include <map>
 #include <ostream>
 
 namespace quicr
@@ -56,4 +57,27 @@ class Namespace
     Name _name;
     uint8_t _sig_bits;
 };
+
+struct NamespaceComparator
+{
+    using is_transparent = std::true_type;
+
+    bool operator()(const Namespace &ns1, const Namespace &ns2) const
+    {
+        return ns1 < ns2;
+    }
+
+    bool operator()(const Namespace &ns, const Name &name) const
+    {
+        return ns.contains(name);
+    }
+
+    bool operator()(const Name &name, const Namespace &ns) const
+    {
+        return ns.contains(name);
+    }
+};
+
+template <class T, class Allocator = std::allocator<std::pair<const quicr::Namespace, T>>>
+using namespace_map = std::map<quicr::Namespace, T, NamespaceComparator, Allocator>;
 } // namespace quicr

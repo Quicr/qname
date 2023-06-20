@@ -1,6 +1,6 @@
 #include <doctest/doctest.h>
 
-#include <quicr_name>
+#include <quicr/namespace.h>
 
 #include <type_traits>
 
