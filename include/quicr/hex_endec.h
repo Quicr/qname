@@ -31,16 +31,19 @@ namespace quicr
  * @tparam Size The maximum size in bits of the Hex string
  * @tparam ...Dist The distribution of bits for each value passed.
  */
-template <uint16_t Size, uint8_t... Dist> class HexEndec
+template <uint16_t Size, uint8_t... Dist>
+class HexEndec
 {
-    template <typename... UInt_ts> struct is_valid_uint : std::bool_constant<(std::is_unsigned_v<UInt_ts> && ...)>
+    template <typename... UInt_ts>
+    struct is_valid_uint : std::bool_constant<(std::is_unsigned_v<UInt_ts> && ...)>
     {
     };
+
+    static_assert((Size & (Size - 1)) == 0, "Size must be a power of 2");
 
   public:
     HexEndec()
     {
-        static_assert((Size & (Size - 1)) == 0, "Size must be a power of 2");
         static_assert(Size == (Dist + ...), "Total bits must be equal to Size");
     }
 
@@ -52,12 +55,12 @@ template <uint16_t Size, uint8_t... Dist> class HexEndec
      * @tparam ...UInt_ts The unsigned integer types to be passed.
      * @param ...values The unsigned values to be encoded into the hex string.
      *
-     * @returns Hex string containing the provided values distributed according to
-     *          Dist in order.
+     * @returns Hex string containing the provided values distributed according
+     * to Dist in order.
      */
-    template <typename... UInt_ts> static inline std::string Encode(UInt_ts... values)
+    template <typename... UInt_ts>
+    static inline std::string Encode(UInt_ts... values)
     {
-        static_assert((Size & (Size - 1)) == 0, "Size must be a power of 2");
         static_assert(Size == (Dist + ...), "Total bits cannot exceed specified size");
         static_assert(sizeof...(Dist) == sizeof...(UInt_ts), "Number of values should match distribution of bits");
         static_assert(is_valid_uint<UInt_ts...>::value, "Arguments must all be unsigned integers");
@@ -66,11 +69,12 @@ template <uint16_t Size, uint8_t... Dist> class HexEndec
         return Encode(std::span<uint8_t>(distribution), std::forward<UInt_ts>(values)...);
     }
 
-    template <typename... UInt_ts> static inline std::string Encode(std::span<uint8_t> distribution, UInt_ts... values)
+    template <typename... UInt_ts>
+    static inline std::string Encode(std::span<uint8_t> distribution, UInt_ts... values)
     {
-        static_assert((Size & (Size - 1)) == 0, "Size must be a power of 2");
         static_assert(is_valid_uint<UInt_ts...>::value, "Arguments must all be unsigned integers");
-        assert(distribution.size() == sizeof...(UInt_ts) && "Number of values should match distribution of bits");
+        if (distribution.size() != sizeof...(UInt_ts))
+            throw std::invalid_argument("Number of values should match distribution of bits");
 
         std::array<uint64_t, sizeof...(UInt_ts)> vals{values...};
         return Encode(distribution, std::span<uint64_t>(vals));
@@ -86,8 +90,8 @@ template <uint16_t Size, uint8_t... Dist> class HexEndec
     static inline typename std::enable_if<B, std::string>::type Encode(std::span<uint8_t> distribution,
                                                                        std::span<uint64_t> values)
     {
-        static_assert((Size & (Size - 1)) == 0, "Size must be a power of 2");
-        assert(distribution.size() == values.size() && "Number of values should match distribution of bits");
+        if (distribution.size() != values.size())
+            throw std::invalid_argument("Number of values should match distribution of bits");
 
         uint64_t bits = 0;
         for (size_t i = 0; i < values.size(); ++i)
@@ -119,8 +123,8 @@ template <uint16_t Size, uint8_t... Dist> class HexEndec
     static inline typename std::enable_if<!B, std::string>::type Encode(std::span<uint8_t> distribution,
                                                                         std::span<uint64_t> values)
     {
-        static_assert((Size & (Size - 1)) == 0, "Size must be a power of 2");
-        assert(distribution.size() == values.size() && "Number of values should match distribution of bits");
+        if (distribution.size() != values.size())
+            throw std::invalid_argument("Number of values should match distribution of bits");
 
         std::bitset<Size> bits;
         for (size_t i = 0; i < values.size(); ++i)
@@ -166,13 +170,12 @@ template <uint16_t Size, uint8_t... Dist> class HexEndec
      * @param hex The hex string to decode. Must have a length in bytes
      *            corresponding to the size in bits of Size.
      *
-     * @returns Structured binding of values decoded from hex string corresponding
-     *          in order to the size of Dist.
+     * @returns Structured binding of values decoded from hex string
+     * corresponding in order to the size of Dist.
      */
     template <typename Uint_t = uint64_t, typename = typename std::enable_if<is_valid_uint<Uint_t>::value, Uint_t>>
     static inline std::array<Uint_t, sizeof...(Dist)> Decode(std::string_view hex)
     {
-        static_assert((Size & (Size - 1)) == 0, "Size must be a power of 2");
         static_assert(Size >= (Dist + ...), "Total bits cannot exceed specified size");
 
         std::array<uint8_t, sizeof...(Dist)> distribution{Dist...};
@@ -186,7 +189,6 @@ template <uint16_t Size, uint8_t... Dist> class HexEndec
     template <typename Uint_t = uint64_t, typename = typename std::enable_if<is_valid_uint<Uint_t>::value, Uint_t>>
     static inline std::array<Uint_t, sizeof...(Dist)> Decode(const quicr::Name &name)
     {
-        static_assert((Size & (Size - 1)) == 0, "Size must be a power of 2");
         static_assert(Size >= (Dist + ...), "Total bits cannot exceed specified size");
 
         std::array<uint8_t, sizeof...(Dist)> distribution{Dist...};
@@ -202,8 +204,6 @@ template <uint16_t Size, uint8_t... Dist> class HexEndec
     static inline typename std::enable_if<B, std::vector<Uint_t>>::type Decode(std::span<uint8_t> distribution,
                                                                                std::string_view hex)
     {
-        static_assert((Size & (Size - 1)) == 0, "Size must be a power of 2");
-
         const auto dist_size = distribution.size();
         std::vector<uint64_t> result(dist_size);
         uint64_t bits = hex_to_uint<uint64_t>(hex);
@@ -222,8 +222,6 @@ template <uint16_t Size, uint8_t... Dist> class HexEndec
     static inline typename std::enable_if<!B, std::vector<Uint_t>>::type Decode(std::span<uint8_t> distribution,
                                                                                 std::string_view hex)
     {
-        static_assert((Size & (Size - 1)) == 0, "Size must be a power of 2");
-
         if (hex.starts_with("0x"))
             hex.remove_prefix(2);
 
