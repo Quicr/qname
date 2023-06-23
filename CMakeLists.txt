@@ -25,9 +25,22 @@ if(CLANG_TIDY)
     endif()
 endif()
 
-add_subdirectory(src)
+add_library(qname INTERFACE)
+add_library(quicr::name ALIAS qname)
+target_include_directories(qname INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
-include(FetchContent)
+install(TARGETS qname EXPORT quicr::name)
+
+
+#=============================================================================#
+# Build tests/benchmarks
+#=============================================================================#
+
+if(BUILD_TESTING OR BUILD_BENCHMARKING)
+    include(FetchContent)
+endif()
 
 if(BUILD_TESTING AND qname_BUILD_TESTS)
     FetchContent_Declare(

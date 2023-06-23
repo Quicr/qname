@@ -5,7 +5,7 @@ add_executable(qname_test
                 name.cpp
                 namespace.cpp
                 hex_endec.cpp)
-target_include_directories(qname_test PRIVATE ${PROJECT_SOURCE_DIR}/src ${DOCTEST_INCLUDE_DIR})
+target_include_directories(qname_test PRIVATE ${DOCTEST_INCLUDE_DIR})
 
 target_link_libraries(qname_test PRIVATE qname doctest::doctest)
 

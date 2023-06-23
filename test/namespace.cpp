@@ -48,3 +48,24 @@ TEST_CASE("quicr::Namespace String Constructor Test")
     CHECK_EQ(ns.name(), 0xA11CEE00000001010007000000000000_name);
     CHECK_EQ(ns.length(), 80);
 }
+
+
+TEST_CASE("quicr::Namespace Map Sorting Test")
+{
+    {
+        quicr::Name name = 0xABCDFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
+        quicr::Namespace ns(name, 16);
+        quicr::namespace_map<int> ns_map{{ns, 101}};
+
+        CHECK_EQ(ns_map.count(ns), 1);
+        CHECK_EQ(ns_map.count(name), 1);
+    }
+    {
+        quicr::Name name = 0xABCDFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
+        quicr::Namespace ns(name, 16);
+        quicr::namespace_map<int, std::greater> ns_map{{ns, 101}};
+
+        CHECK_EQ(ns_map.count(ns), 1);
+        CHECK_EQ(ns_map.count(name), 1);
+    }
+}
