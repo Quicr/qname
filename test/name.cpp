@@ -3,6 +3,7 @@
 #include <quicr/name.h>
 
 #include <type_traits>
+#include <vector>
 
 TEST_CASE("quicr::Name Constructor Tests")
 {
