@@ -41,13 +41,12 @@ static void HexEndec_Decode64_to_4x16(benchmark::State& state)
 static void HexEndec_RealEncode(benchmark::State& state)
 {
     quicr::HexEndec<128, 24, 8, 24, 8, 16, 48> format;
-    auto time = std::time(0);
     const uint32_t orgId = 0x00A11CEE;
     const uint8_t appId = 0x00;
     const uint32_t confId = 0x00F00001;
     const uint8_t mediaType = 0x00 | 0x1;
     const uint16_t clientId = 0xFFFF;
-    const uint64_t uniqueId = time;
+    const uint64_t uniqueId = 0u;
     for (auto _ : state)
     {
         format.Encode(orgId, appId, confId, mediaType, clientId, uniqueId);

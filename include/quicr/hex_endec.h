@@ -75,7 +75,7 @@ class HexEndec
         return Encode(distribution, std::span<uint64_t>(vals));
     }
 
-    static constexpr std::string Encode(const std::span<uint16_t>& distribution, const std::span<uint64_t>& values)
+    static inline std::string Encode(const std::span<uint16_t>& distribution, const std::span<uint64_t>& values)
     {
         if (distribution.size() != values.size())
             throw std::invalid_argument("Number of values should match distribution of bits");
