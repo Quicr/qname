@@ -1,8 +1,17 @@
 ---
 Language:      Cpp
-BasedOnStyle:  Microsoft
+BasedOnStyle:  Mozilla
 
+AllowShortIfStatementsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: true
+AllowShortBlocksOnASingleLine: true
 AlwaysBreakTemplateDeclarations: Yes
+AlwaysBreakAfterReturnType: None
+AlwaysBreakAfterDefinitionReturnType: None
+BreakAfterAttributes: Leave
+BreakBeforeBraces: Allman
+ColumnLimit: 120
 IndentWidth: 4
+PackConstructorInitializers: NextLine
 ...
 

@@ -31,10 +31,10 @@ namespace quicr
  * @tparam Size The maximum size in bits of the Hex string
  * @tparam ...Dist The distribution of bits for each value passed.
  */
-template <uint16_t Size, uint8_t... Dist>
+template<uint16_t Size, uint8_t... Dist>
 class HexEndec
 {
-    template <typename... UInt_ts>
+    template<typename... UInt_ts>
     struct is_valid_uint : std::bool_constant<(std::is_unsigned_v<UInt_ts> && ...)>
     {
     };
@@ -42,10 +42,7 @@ class HexEndec
     static_assert((Size & (Size - 1)) == 0, "Size must be a power of 2");
 
   public:
-    HexEndec()
-    {
-        static_assert(Size == (Dist + ...), "Total bits must be equal to Size");
-    }
+    HexEndec() { static_assert(Size == (Dist + ...), "Total bits must be equal to Size"); }
 
     /**
      * @brief Encodes the last Dist bits of values in order according to
@@ -58,37 +55,37 @@ class HexEndec
      * @returns Hex string containing the provided values distributed according
      * to Dist in order.
      */
-    template <typename... UInt_ts>
+    template<typename... UInt_ts>
     static inline std::string Encode(UInt_ts... values)
     {
         static_assert(Size == (Dist + ...), "Total bits cannot exceed specified size");
         static_assert(sizeof...(Dist) == sizeof...(UInt_ts), "Number of values should match distribution of bits");
         static_assert(is_valid_uint<UInt_ts...>::value, "Arguments must all be unsigned integers");
 
-        std::array<uint8_t, sizeof...(UInt_ts)> distribution{Dist...};
+        std::array<uint8_t, sizeof...(UInt_ts)> distribution{ Dist... };
         return Encode(std::span<uint8_t>(distribution), std::forward<UInt_ts>(values)...);
     }
 
-    template <typename... UInt_ts>
+    template<typename... UInt_ts>
     static inline std::string Encode(std::span<uint8_t> distribution, UInt_ts... values)
     {
         static_assert(is_valid_uint<UInt_ts...>::value, "Arguments must all be unsigned integers");
         if (distribution.size() != sizeof...(UInt_ts))
             throw std::invalid_argument("Number of values should match distribution of bits");
 
-        std::array<uint64_t, sizeof...(UInt_ts)> vals{values...};
+        std::array<uint64_t, sizeof...(UInt_ts)> vals{ values... };
         return Encode(distribution, std::span<uint64_t>(vals));
     }
 
-    template <size_t N, typename... UInt_ts>
+    template<size_t N, typename... UInt_ts>
     static inline std::string Encode(std::array<uint8_t, N> distribution, UInt_ts... values)
     {
         return Encode(std::span<uint8_t>(distribution), std::forward<UInt_ts>(values)...);
     }
 
-    template <bool B = Size <= sizeof(uint64_t) * 8>
-    static inline typename std::enable_if<B, std::string>::type Encode(std::span<uint8_t> distribution,
-                                                                       std::span<uint64_t> values)
+    template<bool B = Size <= sizeof(uint64_t) * 8>
+    static inline typename std::enable_if_t<B, std::string> Encode(std::span<uint8_t> distribution,
+                                                                   std::span<uint64_t> values)
     {
         if (distribution.size() != values.size())
             throw std::invalid_argument("Number of values should match distribution of bits");
@@ -96,7 +93,7 @@ class HexEndec
         uint64_t bits = 0;
         for (size_t i = 0; i < values.size(); ++i)
         {
-            const uint64_t &value = values[i];
+            const uint64_t& value = values[i];
             uint8_t dist = distribution[i];
             bits <<= dist;
             bits |= (value & ~(~0x0ull << dist));
@@ -105,23 +102,23 @@ class HexEndec
         return std::string("0x") + uint_to_hex<uint64_t>(bits);
     }
 
-    template <bool B = Size <= sizeof(uint64_t) * 8>
-    static inline typename std::enable_if<B, std::string>::type Encode(std::vector<uint8_t> distribution,
-                                                                       std::vector<uint64_t> values)
+    template<bool B = Size <= sizeof(uint64_t) * 8>
+    static inline typename std::enable_if_t<B, std::string> Encode(std::vector<uint8_t> distribution,
+                                                                   std::vector<uint64_t> values)
     {
         return Encode(std::span<uint8_t>(distribution), std::span<uint64_t>(values));
     }
 
-    template <size_t N, bool B = Size <= sizeof(uint64_t) * 8>
-    static inline typename std::enable_if<B, std::string>::type Encode(std::array<uint8_t, N> distribution,
-                                                                       std::array<uint64_t, N> values)
+    template<size_t N, bool B = Size <= sizeof(uint64_t) * 8>
+    static inline typename std::enable_if_t<B, std::string> Encode(std::array<uint8_t, N> distribution,
+                                                                   std::array<uint64_t, N> values)
     {
         return Encode(std::span<uint8_t>(distribution), std::span<uint64_t>(values));
     }
 
-    template <bool B = Size <= sizeof(uint64_t) * 8>
-    static inline typename std::enable_if<!B, std::string>::type Encode(std::span<uint8_t> distribution,
-                                                                        std::span<uint64_t> values)
+    template<bool B = Size <= sizeof(uint64_t) * 8>
+    static inline typename std::enable_if_t<!B, std::string> Encode(std::span<uint8_t> distribution,
+                                                                    std::span<uint64_t> values)
     {
         if (distribution.size() != values.size())
             throw std::invalid_argument("Number of values should match distribution of bits");
@@ -129,7 +126,7 @@ class HexEndec
         std::bitset<Size> bits;
         for (size_t i = 0; i < values.size(); ++i)
         {
-            const uint64_t &value = values[i];
+            const uint64_t& value = values[i];
             uint8_t dist = distribution[i];
             bits <<= dist;
             bits |= std::bitset<Size>(dist >= sizeof(uint64_t) * 8 ? value : (value & ~(~0x0ull << dist)));
@@ -148,16 +145,16 @@ class HexEndec
         return out_hex;
     }
 
-    template <bool B = Size <= sizeof(uint64_t) * 8>
-    static inline typename std::enable_if<!B, std::string>::type Encode(std::vector<uint8_t> distribution,
-                                                                        std::vector<uint64_t> values)
+    template<bool B = Size <= sizeof(uint64_t) * 8>
+    static inline typename std::enable_if_t<!B, std::string> Encode(std::vector<uint8_t> distribution,
+                                                                    std::vector<uint64_t> values)
     {
         return Encode(std::span<uint8_t>(distribution), std::span<uint64_t>(values));
     }
 
-    template <size_t N, bool B = Size <= sizeof(uint64_t) * 8>
-    static inline typename std::enable_if<!B, std::string>::type Encode(std::array<uint8_t, N> distribution,
-                                                                        std::array<uint64_t, N> values)
+    template<size_t N, bool B = Size <= sizeof(uint64_t) * 8>
+    static inline typename std::enable_if_t<!B, std::string> Encode(std::array<uint8_t, N> distribution,
+                                                                    std::array<uint64_t, N> values)
     {
         return Encode(std::span<uint8_t>(distribution), std::span<uint64_t>(values));
     }
@@ -173,36 +170,30 @@ class HexEndec
      * @returns Structured binding of values decoded from hex string
      * corresponding in order to the size of Dist.
      */
-    template <typename Uint_t = uint64_t, typename = typename std::enable_if<is_valid_uint<Uint_t>::value, Uint_t>>
+    template<typename Uint_t = uint64_t, typename = typename std::enable_if_t<is_valid_uint<Uint_t>::value, Uint_t>>
     static inline std::array<Uint_t, sizeof...(Dist)> Decode(std::string_view hex)
     {
         static_assert(Size >= (Dist + ...), "Total bits cannot exceed specified size");
 
-        std::array<uint8_t, sizeof...(Dist)> distribution{Dist...};
-        auto result = Decode(distribution, hex);
-        std::array<Uint_t, sizeof...(Dist)> out;
-        std::copy_n(std::make_move_iterator(result.begin()), sizeof...(Dist), out.begin());
-
-        return out;
+        std::array<uint8_t, sizeof...(Dist)> distribution{ Dist... };
+        return Decode<sizeof...(Dist)>(distribution, hex);
     }
 
-    template <typename Uint_t = uint64_t, typename = typename std::enable_if<is_valid_uint<Uint_t>::value, Uint_t>>
-    static inline std::array<Uint_t, sizeof...(Dist)> Decode(const quicr::Name &name)
+    template<typename Uint_t = uint64_t, typename = typename std::enable_if_t<is_valid_uint<Uint_t>::value, Uint_t>>
+    static inline std::array<Uint_t, sizeof...(Dist)> Decode(const quicr::Name& name)
     {
         static_assert(Size >= (Dist + ...), "Total bits cannot exceed specified size");
 
-        std::array<uint8_t, sizeof...(Dist)> distribution{Dist...};
-        auto result = Decode(distribution, std::string_view(name.to_hex()));
-        std::array<Uint_t, sizeof...(Dist)> out;
-        std::copy_n(std::make_move_iterator(result.begin()), sizeof...(Dist), out.begin());
-
-        return out;
+        std::array<uint8_t, sizeof...(Dist)> distribution{ Dist... };
+        std::string hex = name;
+        return Decode<sizeof...(Dist), Uint_t>(distribution, name);
     }
 
-    template <typename Uint_t = uint64_t, bool B = Size <= sizeof(uint64_t) * 8,
-              typename = typename std::enable_if<is_valid_uint<Uint_t>::value, Uint_t>>
-    static inline typename std::enable_if<B, std::vector<Uint_t>>::type Decode(std::span<uint8_t> distribution,
-                                                                               std::string_view hex)
+    template<typename Uint_t = uint64_t,
+             bool B = Size <= sizeof(uint64_t) * 8,
+             typename = typename std::enable_if_t<is_valid_uint<Uint_t>::value, Uint_t>>
+    static inline typename std::enable_if_t<B, std::vector<Uint_t>> Decode(std::span<uint8_t> distribution,
+                                                                           std::string_view hex)
     {
         const auto dist_size = distribution.size();
         std::vector<uint64_t> result(dist_size);
@@ -217,45 +208,49 @@ class HexEndec
         return result;
     }
 
-    template <typename Uint_t = uint64_t, bool B = Size <= sizeof(uint64_t) * 8,
-              typename = typename std::enable_if<is_valid_uint<Uint_t>::value, Uint_t>>
-    static inline typename std::enable_if<!B, std::vector<Uint_t>>::type Decode(std::span<uint8_t> distribution,
-                                                                                std::string_view hex)
+    template<typename Uint_t = uint64_t,
+             bool B = Size <= sizeof(uint64_t) * 8,
+             typename = typename std::enable_if_t<is_valid_uint<Uint_t>::value, Uint_t>>
+    static inline typename std::enable_if_t<!B, std::vector<Uint_t>> Decode(std::span<uint8_t> distribution,
+                                                                            std::string_view hex)
     {
-        if (hex.starts_with("0x"))
-            hex.remove_prefix(2);
+        if (hex.starts_with("0x")) hex.remove_prefix(2);
 
         constexpr uint8_t hex_length = Size / 4;
         if (hex.length() != hex_length)
             throw std::runtime_error("Hex string value must be " + std::to_string(hex_length) + " characters (" +
                                      std::to_string(Size / 8) + " bytes). Got: " + std::to_string(hex.length()));
 
-        std::bitset<Size> bits;
-        constexpr uint8_t section_length = sizeof(uint64_t) * 2;
-        constexpr size_t sizeof_uint64_bits = section_length * 4;
-        constexpr size_t num_sections = Size / sizeof_uint64_bits;
-        for (size_t i = 0, j = 0; i < (section_length * num_sections); i += section_length)
-        {
-            bits |= std::bitset<Size>(hex_to_uint<uint64_t>(hex.substr(i, section_length)))
-                    << (sizeof_uint64_bits * (num_sections - ++j));
-        }
+        return Decode(distribution, quicr::Name(hex));
+    }
 
+    template<typename Uint_t = uint64_t>
+    static inline std::vector<Uint_t> Decode(std::span<uint8_t> distribution, quicr::Name name)
+    {
         const auto dist_size = distribution.size();
         std::vector<uint64_t> result(dist_size);
-        for (size_t i = 0; i < dist_size; ++i)
+        for (int i = dist_size - 1; i >= 0; --i)
         {
             const auto dist = distribution[i];
-            result[i] = (bits >> (Size - dist)).to_ullong();
-            bits <<= dist;
+            result[i] = (name.bits<std::uint64_t>(0, dist));
+            name >>= dist;
         }
 
         return result;
     }
-
-    template <typename Uint_t = uint64_t>
-    static inline std::vector<Uint_t> Decode(std::span<uint8_t> distribution, const quicr::Name &name)
+    template<size_t N, typename Uint_t = uint64_t>
+    static constexpr std::array<Uint_t, N> Decode(std::span<uint8_t> distribution, quicr::Name name)
     {
-        return Decode(distribution, std::string_view(name.to_hex()));
+        const auto dist_size = distribution.size();
+        std::array<uint64_t, N> result;
+        for (int i = dist_size - 1; i >= 0; --i)
+        {
+            const auto dist = distribution[i];
+            result[i] = name.bits<std::uint64_t>(0, dist);
+            name >>= dist;
+        }
+
+        return result;
     }
 };
 } // namespace quicr
