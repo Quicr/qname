@@ -60,7 +60,7 @@ static void HexEndec_RealDecode_Name(benchmark::State& state)
     quicr::Name qname = 0xA11CEE00F00001000000000000000000_name;
     for (auto _ : state)
     {
-        format.Decode(qname);
+        [[maybe_unused]] auto __ = format.Decode(qname);
     }
 }
 static void HexEndec_RealDecode_String(benchmark::State& state)
@@ -69,7 +69,7 @@ static void HexEndec_RealDecode_String(benchmark::State& state)
     quicr::Name qname = 0xA11CEE00F00001000000000000000000_name;
     for (auto _ : state)
     {
-        format.Decode(qname);
+        [[maybe_unused]] auto __ = format.Decode(qname);
     }
 }
 

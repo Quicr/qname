@@ -5,6 +5,21 @@
 #include <type_traits>
 #include <vector>
 
+TEST_CASE("quicr::Name Type Tests")
+{
+    CHECK(std::is_trivial_v<quicr::Name>);
+    CHECK(std::is_trivially_constructible_v<quicr::Name>);
+    CHECK(std::is_trivially_default_constructible_v<quicr::Name>);
+    CHECK(std::is_trivially_destructible_v<quicr::Name>);
+    CHECK(std::is_trivially_copyable_v<quicr::Name>);
+    CHECK(std::is_trivially_copy_assignable_v<quicr::Name>);
+    CHECK(std::is_trivially_move_constructible_v<quicr::Name>);
+    CHECK(std::is_trivially_move_assignable_v<quicr::Name>);
+
+    CHECK_FALSE(std::is_integral_v<quicr::Name>);
+    CHECK(quicr::is_integral_v<quicr::Name>);
+}
+
 TEST_CASE("quicr::Name Constructor Tests")
 {
     constexpr quicr::Name val42(0x42_name);
@@ -22,17 +37,6 @@ TEST_CASE("quicr::Name Constructor Tests")
 
     CHECK_NOTHROW(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name);
     CHECK_THROWS(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0_name);
-
-    CHECK(std::is_trivial_v<quicr::Name>);
-    CHECK(std::is_trivially_constructible_v<quicr::Name>);
-    CHECK(std::is_trivially_default_constructible_v<quicr::Name>);
-    CHECK(std::is_trivially_destructible_v<quicr::Name>);
-    CHECK(std::is_trivially_copyable_v<quicr::Name>);
-    CHECK(std::is_trivially_copy_assignable_v<quicr::Name>);
-    CHECK(std::is_trivially_move_constructible_v<quicr::Name>);
-    CHECK(std::is_trivially_move_assignable_v<quicr::Name>);
-
-    CHECK(quicr::is_integral_v<quicr::Name>);
 }
 
 TEST_CASE("quicr::Name To Hex Tests")

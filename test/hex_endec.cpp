@@ -10,8 +10,8 @@ TEST_CASE("quicr::HexEndec 128bit Encode/Decode Test")
     const uint8_t third_part = 0x00ull;
 
     quicr::HexEndec<128, 64, 56, 8> formatter_128bit;
-    const std::string mask = formatter_128bit.Encode(first_part, second_part, third_part);
-    CHECK_EQ(mask, hex_value);
+    const std::string formatted = formatter_128bit.Encode(first_part, second_part, third_part);
+    CHECK_EQ(formatted, hex_value);
 
     const auto [one, two, three] = formatter_128bit.Decode(std::string_view(hex_value));
     CHECK_EQ(one, first_part);
@@ -26,7 +26,7 @@ TEST_CASE("quicr::HexEndec 128bit Encode/Decode Container Test")
     const uint64_t second_part = 0x22222222222222ull;
     const uint8_t third_part = 0x00ull;
 
-    std::array<uint8_t, 3> dist = { 64, 56, 8 };
+    std::array<uint16_t, 3> dist = { 64, 56, 8 };
     std::array<uint64_t, 3> vals = { first_part, second_part, third_part };
     const std::string mask = quicr::HexEndec<128>::Encode(dist, vals);
     CHECK_EQ(mask, hex_value);

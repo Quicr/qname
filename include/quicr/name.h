@@ -26,18 +26,17 @@ namespace
  * @param hex The hexadecimal character to convert.
  * @returns The decimal value of the provided character.
  */
-template<typename UInt_t = std::uint64_t, typename = typename std::enable_if<std::is_unsigned_v<UInt_t>, UInt_t>::type>
+template<typename UInt_t = std::uint64_t, typename = typename std::enable_if_t<std::is_unsigned_v<UInt_t>>>
 constexpr UInt_t hexchar_to_uint(char hex)
 {
-    UInt_t value = 0;
     if ('0' <= hex && hex <= '9')
-        value += hex - '0';
+        return hex - '0';
     else if ('A' <= hex && hex <= 'F')
-        value += hex - 'A' + 10;
+        return hex - 'A' + 10;
     else if ('a' <= hex && hex <= 'f')
-        value += hex - 'a' + 10;
+        return hex - 'a' + 10;
 
-    return value;
+    return 0;
 }
 
 /**
@@ -48,16 +47,11 @@ constexpr UInt_t hexchar_to_uint(char hex)
  * @param value The decimal value to convert.
  * @returns The hexadecimal character of the provided decimal value.
  */
-template<typename UInt_t, typename = typename std::enable_if<std::is_unsigned_v<UInt_t>, UInt_t>::type>
+template<typename UInt_t, typename = typename std::enable_if_t<std::is_unsigned_v<UInt_t>>>
 constexpr char uint_to_hexchar(UInt_t value)
 {
-    char hex = ' ';
-    if (value > 9)
-        hex = value + 'A' - 10;
-    else
-        hex = value + '0';
-
-    return hex;
+    if (value > 9) return value + 'A' - 10;
+    return value + '0';
 }
 
 /**
@@ -67,7 +61,7 @@ constexpr char uint_to_hexchar(UInt_t value)
  * @param hex The hexadecimal string to convert from.
  * @returns The decimal value of the provided hexadecimal string.
  */
-template<typename UInt_t, typename = typename std::enable_if<std::is_unsigned_v<UInt_t>, UInt_t>::type>
+template<typename UInt_t, typename = typename std::enable_if_t<std::is_unsigned_v<UInt_t>>>
 constexpr UInt_t hex_to_uint(std::string_view hex)
 {
     if (hex.starts_with("0x")) hex.remove_prefix(2);
@@ -89,7 +83,7 @@ constexpr UInt_t hex_to_uint(std::string_view hex)
  * @param value The decimal value to convert from.
  * @returns The hexadecimal string of the provided decimal value.
  */
-template<typename UInt_t, typename = typename std::enable_if<std::is_unsigned_v<UInt_t>, UInt_t>::type>
+template<typename UInt_t, typename = typename std::enable_if_t<std::is_unsigned_v<UInt_t>, UInt_t>>
 std::string uint_to_hex(UInt_t value)
 {
     char hex[sizeof(UInt_t) * 2 + 1] = "";
@@ -264,7 +258,7 @@ class Name
         return *this;
     }
 
-    constexpr Name operator++() { return *this += 1; }
+    constexpr Name& operator++() { return *this += 1; }
 
     constexpr Name operator++(int)
     {
@@ -273,7 +267,7 @@ class Name
         return name;
     }
 
-    constexpr Name operator--() { return *this -= 1; }
+    constexpr Name& operator--() { return *this -= 1; }
 
     constexpr Name operator--(int)
     {
@@ -420,7 +414,7 @@ class Name
      *
      * @param from The starting bit to access from. 0 is the least significant bit.
      * @param length The number of bits to access. If length == 0, returns 1 bit.
-     * @returns A Name with the requested bits.
+     * @returns The requested bits.
      */
     template<typename T = Name, typename = typename std::enable_if_t<std::is_unsigned_v<T> || std::is_class_v<Name>>>
     constexpr T bits(std::uint16_t from, std::uint16_t length = 1) const
@@ -460,17 +454,35 @@ class Name
     uint_type _lo;
 };
 
+/**
+ * @brief Full specialization of bits but return Name, but creates a mask.
+ *
+ * Unlike the uint versions, this one does not shift into the lower bits,
+ * instead only highlighting the bits the were requested, and zeroing the rest
+ * out, effectively creating a mask.
+ *
+ * @param from The starting bit to access from. 0 is the least significant bit.
+ * @param length The number of bits to access. If length == 0, returns 1 bit.
+ * @returns A Name with the requested bits.
+ */
 template<>
 constexpr Name Name::bits<Name>(std::uint16_t from, std::uint16_t length) const
 {
     return *this & (((Name(uint_type(0), uint_type(1)) << length) - 1) << from);
 }
 
+/**
+ * @brief A new definition for checking is_integral in the QUICR API.
+ * @tparam T The type to check.
+ */
 template<typename T>
 struct is_integral : std::is_integral<T>
 {
 };
 
+/**
+ * @brief Unique to QUICR, defines Name to be an integral type to the QUICR API.
+ */
 template<>
 struct is_integral<Name> : std::true_type
 {
