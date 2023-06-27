@@ -87,7 +87,7 @@ class Namespace
     /**
      * Outputs the string version of the Namespace, in the form '0xXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/X'.
      */
-    constexpr operator std::string() const { return std::string(_name) + "/" + std::to_string(_sig_bits); }
+    operator std::string() const { return std::string(_name) + "/" + std::to_string(_sig_bits); }
 
     constexpr operator Name() const { return name(); }
 
