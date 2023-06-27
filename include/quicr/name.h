@@ -431,12 +431,6 @@ class Name
         return T((*this & (((Name(uint_type(0), uint_type(1)) << length) - 1) << from)) >> from);
     }
 
-    template<>
-    constexpr Name bits<Name>(std::uint16_t from, std::uint16_t length) const
-    {
-        return *this & (((Name(uint_type(0), uint_type(1)) << length) - 1) << from);
-    }
-
     [[deprecated("quicr::Name::to_hex is deprecated, use std::string or std::ostream operators")]]
     std::string to_hex() const
     {
@@ -465,6 +459,12 @@ class Name
     uint_type _hi;
     uint_type _lo;
 };
+
+template<>
+constexpr Name Name::bits<Name>(std::uint16_t from, std::uint16_t length) const
+{
+    return *this & (((Name(uint_type(0), uint_type(1)) << length) - 1) << from);
+}
 
 template<typename T>
 struct is_integral : std::is_integral<T>
