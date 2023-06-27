@@ -3,6 +3,22 @@
 #include <quicr/name.h>
 
 #include <type_traits>
+#include <vector>
+
+TEST_CASE("quicr::Name Type Tests")
+{
+    CHECK(std::is_trivial_v<quicr::Name>);
+    CHECK(std::is_trivially_constructible_v<quicr::Name>);
+    CHECK(std::is_trivially_default_constructible_v<quicr::Name>);
+    CHECK(std::is_trivially_destructible_v<quicr::Name>);
+    CHECK(std::is_trivially_copyable_v<quicr::Name>);
+    CHECK(std::is_trivially_copy_assignable_v<quicr::Name>);
+    CHECK(std::is_trivially_move_constructible_v<quicr::Name>);
+    CHECK(std::is_trivially_move_assignable_v<quicr::Name>);
+
+    CHECK_FALSE(std::is_integral_v<quicr::Name>);
+    CHECK(quicr::is_integral_v<quicr::Name>);
+}
 
 TEST_CASE("quicr::Name Constructor Tests")
 {
@@ -21,40 +37,31 @@ TEST_CASE("quicr::Name Constructor Tests")
 
     CHECK_NOTHROW(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name);
     CHECK_THROWS(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0_name);
-
-    CHECK(std::is_trivial_v<quicr::Name>);
-    CHECK(std::is_trivially_constructible_v<quicr::Name>);
-    CHECK(std::is_trivially_default_constructible_v<quicr::Name>);
-    CHECK(std::is_trivially_destructible_v<quicr::Name>);
-    CHECK(std::is_trivially_copyable_v<quicr::Name>);
-    CHECK(std::is_trivially_copy_assignable_v<quicr::Name>);
-    CHECK(std::is_trivially_move_constructible_v<quicr::Name>);
-    CHECK(std::is_trivially_move_assignable_v<quicr::Name>);
 }
 
 TEST_CASE("quicr::Name To Hex Tests")
 {
     {
-        std::string_view original_hex = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+        std::string original_hex = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
         quicr::Name name = original_hex;
 
-        CHECK_EQ(name.to_hex(), original_hex);
+        CHECK_EQ(std::string(name), original_hex);
     }
     {
-        std::string_view original_hex = "0xFFFFFFFFFFFFFFFF0000000000000000";
+        std::string original_hex = "0xFFFFFFFFFFFFFFFF0000000000000000";
         quicr::Name name = original_hex;
 
-        CHECK_EQ(name.to_hex(), original_hex);
+        CHECK_EQ(std::string(name), original_hex);
     }
     {
-        std::string_view long_hex = "0x0000000000000000FFFFFFFFFFFFFFFF";
+        std::string long_hex = "0x0000000000000000FFFFFFFFFFFFFFFF";
         quicr::Name long_name = long_hex;
 
-        std::string_view short_hex = "0xFFFFFFFFFFFFFFFF";
+        std::string short_hex = "0xFFFFFFFFFFFFFFFF";
         quicr::Name not_short_name = short_hex;
-        CHECK_EQ(long_name.to_hex(), long_hex);
-        CHECK_NE(not_short_name.to_hex(), short_hex);
-        CHECK_EQ(long_name.to_hex(), not_short_name.to_hex());
+        CHECK_EQ(std::string(long_name), long_hex);
+        CHECK_NE(std::string(not_short_name), short_hex);
+        CHECK_EQ(long_name, not_short_name);
         CHECK_EQ(long_name, not_short_name);
     }
 }
@@ -194,4 +201,31 @@ TEST_CASE("quicr::Name Logical Arithmetic Tests")
 
     auto arith_or2 = 0x0101010101010101_name | 0x1010101010101010;
     CHECK_EQ(arith_or2, 0x1111111111111111_name);
+}
+
+TEST_CASE("quicr::Name Conversion Tests")
+{
+    quicr::Name name = 0x000000000000FFFFFFFFFFFFFFFFFFFF_name;
+
+    CHECK_EQ(std::uint8_t(name), 0xFF);
+    CHECK_EQ(std::uint16_t(name), 0xFFFF);
+    CHECK_EQ(std::uint32_t(name), 0xFFFFFFFF);
+    CHECK_EQ(std::uint64_t(name), 0xFFFFFFFFFFFFFFFF);
+
+    CHECK_EQ(name, std::string("0x000000000000FFFFFFFFFFFFFFFFFFFF"));
+}
+
+TEST_CASE("quicr::Name Extract Bits Tests")
+{
+    quicr::Name name = 0x000000000000FFFFFFFF000000000000_name;
+
+    CHECK_EQ(name.bits<std::uint64_t>(48, 8), std::uint64_t(0xFF));
+    CHECK_EQ(name.bits<std::uint64_t>(48, 16), std::uint64_t(0xFFFF));
+    CHECK_EQ(name.bits<std::uint64_t>(48, 32), std::uint64_t(0xFFFFFFFF));
+
+    CHECK_EQ(name.bits<std::uint64_t>(0, 64), std::uint64_t(0xFFFF000000000000));
+    CHECK_EQ(name.bits<std::uint64_t>(16, 64), std::uint64_t(0xFFFFFFFF00000000));
+    CHECK_EQ(name.bits<std::uint64_t>(64, 64), std::uint64_t(0x000000000000FFFF));
+
+    CHECK_EQ(name.bits(48, 24), 0x00000000000000FFFFFF000000000000_name);
 }

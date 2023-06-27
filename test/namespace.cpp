@@ -4,7 +4,7 @@
 
 #include <type_traits>
 
-TEST_CASE("quicr::Namespace Constructor Tests")
+TEST_CASE("quicr::Namespace Type Tests")
 {
     CHECK(std::is_trivial_v<quicr::Namespace>);
     CHECK(std::is_trivially_constructible_v<quicr::Namespace>);
@@ -14,6 +14,20 @@ TEST_CASE("quicr::Namespace Constructor Tests")
     CHECK(std::is_trivially_copy_assignable_v<quicr::Namespace>);
     CHECK(std::is_trivially_move_constructible_v<quicr::Namespace>);
     CHECK(std::is_trivially_move_assignable_v<quicr::Namespace>);
+
+    CHECK_FALSE(std::is_integral_v<quicr::Namespace>);
+    CHECK(quicr::is_integral_v<quicr::Namespace>);
+}
+
+TEST_CASE("quicr::Namespace Constructor Tests")
+{
+    CHECK_NOTHROW(quicr::Namespace(0x11111111111111112222222222222200_name, 120));
+    CHECK_NOTHROW(quicr::Namespace(std::string_view("0x11111111111111112222222222222200/120")));
+
+    quicr::Namespace name_ns(0x11111111111111112222222222222200_name, 120);
+    quicr::Namespace str_ns(std::string_view("0x11111111111111112222222222222200/120"));
+
+    CHECK_EQ(name_ns, str_ns);
 }
 
 TEST_CASE("quicr::Namespace Contains Names Test")
@@ -44,18 +58,17 @@ TEST_CASE("quicr::Namespace Contains Namespaces Test")
 TEST_CASE("quicr::Namespace String Constructor Test")
 {
     quicr::Namespace ns = std::string_view("0xA11CEE00000001010007000000000000/80");
-    CHECK_EQ(ns.to_hex(), "0xA11CEE00000001010007000000000000/80");
+    CHECK_EQ(std::string(ns), "0xA11CEE00000001010007000000000000/80");
     CHECK_EQ(ns.name(), 0xA11CEE00000001010007000000000000_name);
     CHECK_EQ(ns.length(), 80);
 }
-
 
 TEST_CASE("quicr::Namespace Map Sorting Test")
 {
     {
         quicr::Name name = 0xABCDFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
         quicr::Namespace ns(name, 16);
-        quicr::namespace_map<int> ns_map{{ns, 101}};
+        quicr::namespace_map<int> ns_map{ { ns, 101 } };
 
         CHECK_EQ(ns_map.count(ns), 1);
         CHECK_EQ(ns_map.count(name), 1);
@@ -63,7 +76,7 @@ TEST_CASE("quicr::Namespace Map Sorting Test")
     {
         quicr::Name name = 0xABCDFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
         quicr::Namespace ns(name, 16);
-        quicr::namespace_map<int, std::greater> ns_map{{ns, 101}};
+        quicr::namespace_map<int, std::greater> ns_map{ { ns, 101 } };
 
         CHECK_EQ(ns_map.count(ns), 1);
         CHECK_EQ(ns_map.count(name), 1);

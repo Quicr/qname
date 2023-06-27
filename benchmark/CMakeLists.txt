@@ -1,5 +1,6 @@
 add_executable(qname_benchmark
                 name.cpp
+                namespace.cpp
                 hex_endec.cpp)
 
 target_link_libraries(qname_benchmark PRIVATE qname benchmark::benchmark benchmark::benchmark_main)
