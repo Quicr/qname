@@ -419,6 +419,8 @@ class Name
     template<typename T = Name, typename = typename std::enable_if_t<std::is_unsigned_v<T> || std::is_class_v<Name>>>
     constexpr T bits(std::uint16_t from, std::uint16_t length = 1) const
     {
+        if (length == 0) return 0;
+
         if (length > sizeof(uint_type) * 8)
             throw std::domain_error("length is greater than 64 bits, did you mean to use Name?");
 
@@ -468,6 +470,7 @@ class Name
 template<>
 constexpr Name Name::bits<Name>(std::uint16_t from, std::uint16_t length) const
 {
+    if (length == 0) return Name(uint_type(0), uint_type(0));
     return *this & (((Name(uint_type(0), uint_type(1)) << length) - 1) << from);
 }
 

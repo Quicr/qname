@@ -41,8 +41,11 @@ class Namespace
     {
         auto delim_pos = str.find_first_of('/');
         _name = str.substr(0, delim_pos);
+
         str.remove_prefix(delim_pos + 1);
         _sig_bits = str_to_uint(str);
+
+        _name = _name.bits((sizeof(Name) * 8) - _sig_bits, _sig_bits);
     }
 
     /**
