@@ -121,22 +121,23 @@ class HexEndec
     }
 
     template<size_t N, typename Uint_t = uint64_t>
-    static constexpr std::array<Uint_t, N> Decode(std::span<uint16_t> distribution, quicr::Name name)
+    static constexpr std::array<Uint_t, N> Decode(const std::span<uint16_t>& distribution, quicr::Name name)
     {
         const auto dist_size = distribution.size();
-        std::array<uint64_t, N> result;
-        for (int i = dist_size - 1; i >= 0; --i)
+        std::array<Uint_t, N> result;
+
+        for (size_t i = 0; i < dist_size; ++i)
         {
             const auto dist = distribution[i];
-            result[i] = name.bits<std::uint64_t>(0, dist);
-            name >>= dist;
+            result[i] = name.bits<Uint_t>(Size - dist, dist);
+            name <<= dist;
         }
 
         return result;
     }
 
     template<typename Uint_t = uint64_t, typename = typename std::enable_if_t<is_valid_uint<Uint_t>::value, Uint_t>>
-    static inline typename std::vector<Uint_t> Decode(std::span<uint16_t> distribution, std::string_view hex)
+    static inline std::vector<Uint_t> Decode(const std::span<uint16_t>& distribution, std::string_view hex)
     {
         return Decode(distribution, quicr::Name(hex));
     }
@@ -144,16 +145,13 @@ class HexEndec
     template<typename Uint_t = uint64_t>
     static inline std::vector<Uint_t> Decode(std::span<uint16_t> distribution, quicr::Name name)
     {
-        if (std::accumulate(distribution.begin(), distribution.end(), 0) > Size)
-            throw std::domain_error("Total bits cannot exceed specified size");
-
         const auto dist_size = distribution.size();
-        std::vector<uint64_t> result(dist_size);
-        for (int i = dist_size - 1; i >= 0; --i)
+        std::vector<Uint_t> result(dist_size);
+        for (size_t i = 0; i < dist_size; ++i)
         {
             const auto dist = distribution[i];
-            result[i] = (name.bits<std::uint64_t>(0, dist));
-            name >>= dist;
+            result[i] = name.bits<Uint_t>(Size - dist, dist);
+            name <<= dist;
         }
 
         return result;

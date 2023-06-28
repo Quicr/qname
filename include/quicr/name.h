@@ -471,6 +471,8 @@ template<>
 constexpr Name Name::bits<Name>(std::uint16_t from, std::uint16_t length) const
 {
     if (length == 0) return Name(uint_type(0), uint_type(0));
+    if (length == sizeof(Name) * 8) return *this;
+
     return *this & (((Name(uint_type(0), uint_type(1)) << length) - 1) << from);
 }
 
