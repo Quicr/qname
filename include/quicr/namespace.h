@@ -232,13 +232,4 @@ template<class T,
          template<typename> class Comparator = std::less,
          class Allocator = std::allocator<std::pair<const quicr::Namespace, T>>>
 using namespace_map = std::map<quicr::Namespace, T, namespace_comparator<Comparator>, Allocator>;
-
-/**
- * @brief Unique to QUICR, defines Name to be an integral type to the QUICR API.
- */
-template<>
-struct is_integral<Namespace> : std::true_type
-{
-};
-
 } // namespace quicr
