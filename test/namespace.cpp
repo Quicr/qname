@@ -14,9 +14,6 @@ TEST_CASE("quicr::Namespace Type Tests")
     CHECK(std::is_trivially_copy_assignable_v<quicr::Namespace>);
     CHECK(std::is_trivially_move_constructible_v<quicr::Namespace>);
     CHECK(std::is_trivially_move_assignable_v<quicr::Namespace>);
-
-    CHECK_FALSE(std::is_integral_v<quicr::Namespace>);
-    CHECK(quicr::is_integral_v<quicr::Namespace>);
 }
 
 TEST_CASE("quicr::Namespace Constructor Tests")
@@ -65,20 +62,29 @@ TEST_CASE("quicr::Namespace String Constructor Test")
 
 TEST_CASE("quicr::Namespace Map Sorting Test")
 {
+    quicr::Name name = 0xABCDEFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
+    quicr::Namespace ns(name, 24);
+    quicr::Namespace ns2(name, 16);
     {
-        quicr::Name name = 0xABCDFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
-        quicr::Namespace ns(name, 16);
-        quicr::namespace_map<int> ns_map{ { ns, 101 } };
+        quicr::namespace_map<int> ns_map{ { ns, 101 }, { ns2, 102 } };
 
         CHECK_EQ(ns_map.count(ns), 1);
-        CHECK_EQ(ns_map.count(name), 1);
+        CHECK_EQ(ns_map.count(ns2), 1);
+        CHECK_EQ(ns_map.size(), 2);
+        CHECK_EQ(ns_map.count(name), 2);
+        CHECK_EQ(ns_map.find(ns)->second, 101);
+        CHECK_EQ(ns_map.find(ns2)->second, 102);
+        CHECK_EQ(ns_map.find(name)->second, 102);
     }
     {
-        quicr::Name name = 0xABCDFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
-        quicr::Namespace ns(name, 16);
-        quicr::namespace_map<int, std::greater> ns_map{ { ns, 101 } };
+        quicr::namespace_map<int, std::greater> ns_map{ { ns, 101 }, { ns2, 102 } };
 
         CHECK_EQ(ns_map.count(ns), 1);
-        CHECK_EQ(ns_map.count(name), 1);
+        CHECK_EQ(ns_map.count(ns2), 1);
+        CHECK_EQ(ns_map.size(), 2);
+        CHECK_EQ(ns_map.count(name), 2);
+        CHECK_EQ(ns_map.find(ns)->second, 101);
+        CHECK_EQ(ns_map.find(ns2)->second, 102);
+        CHECK_EQ(ns_map.find(name)->second, 101);
     }
 }
