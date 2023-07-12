@@ -63,28 +63,41 @@ TEST_CASE("quicr::Namespace String Constructor Test")
 TEST_CASE("quicr::Namespace Map Sorting Test")
 {
     quicr::Name name = 0xABCDEFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
-    quicr::Namespace ns(name, 24);
-    quicr::Namespace ns2(name, 16);
-    {
-        quicr::namespace_map<int> ns_map{ { ns, 101 }, { ns2, 102 } };
+    quicr::Namespace base_namespace(name, 16);
+    quicr::Namespace sub_namespace(name, 24);
 
-        CHECK_EQ(ns_map.count(ns), 1);
-        CHECK_EQ(ns_map.count(ns2), 1);
+    const int base_value = 101;
+    const int sub_value = 102;
+
+    // Find returns the smallest match.
+    {
+        quicr::namespace_map<int, std::less> ns_map{
+            { base_namespace, base_value },
+            { sub_namespace, sub_value },
+        };
+
+        CHECK_EQ(ns_map.count(sub_namespace), 1);
+        CHECK_EQ(ns_map.count(base_namespace), 1);
         CHECK_EQ(ns_map.size(), 2);
         CHECK_EQ(ns_map.count(name), 2);
-        CHECK_EQ(ns_map.find(ns)->second, 101);
-        CHECK_EQ(ns_map.find(ns2)->second, 102);
-        CHECK_EQ(ns_map.find(name)->second, 102);
+        CHECK_EQ(ns_map.find(sub_namespace)->second, sub_value);
+        CHECK_EQ(ns_map.find(base_namespace)->second, base_value);
+        CHECK_EQ(ns_map.find(name)->second, base_value);
     }
-    {
-        quicr::namespace_map<int, std::greater> ns_map{ { ns, 101 }, { ns2, 102 } };
 
-        CHECK_EQ(ns_map.count(ns), 1);
-        CHECK_EQ(ns_map.count(ns2), 1);
+    // Find returns the greatest match.
+    {
+        quicr::namespace_map<int, std::greater> ns_map{
+            { base_namespace, base_value },
+            { sub_namespace, sub_value },
+        };
+
+        CHECK_EQ(ns_map.count(sub_namespace), 1);
+        CHECK_EQ(ns_map.count(base_namespace), 1);
         CHECK_EQ(ns_map.size(), 2);
         CHECK_EQ(ns_map.count(name), 2);
-        CHECK_EQ(ns_map.find(ns)->second, 101);
-        CHECK_EQ(ns_map.find(ns2)->second, 102);
-        CHECK_EQ(ns_map.find(name)->second, 101);
+        CHECK_EQ(ns_map.find(sub_namespace)->second, sub_value);
+        CHECK_EQ(ns_map.find(base_namespace)->second, base_value);
+        CHECK_EQ(ns_map.find(name)->second, sub_value);
     }
 }
