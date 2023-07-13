@@ -224,12 +224,28 @@ class namespace_comparator : Comp<quicr::Namespace>
 
 /**
  * @brief A map keyed on quicr::Namespace.
+ *
+ * A map keyed by quicr::Namespace, and searchable by quicr::Name as well. It
+ * is thus possible to use a quicr::Name to retrieve an entry.
+ *
+ * When indexing using quicr::Name, if the given comparator is std::greater,
+ * the entry returned is that which has a key (quicr::Namespace) whose value
+ * matches quicr::Name the longest (i.e. most specific namespace). When the
+ * comparator is std::less, the entry returned is that which has a key
+ * (quicr::Namespace) whose value matches quicr::Name the shortest (i.e. the
+ * shortest match)
+ *
  * @tparam T The value type
- * @tparam Comparator The STL comparator to use inside the namespace_comparator. Defaults to std::less<T>.
- * @tparam Allocator The allocator type to use. Defaults to the same as std::map.
+ * @tparam Comparator The STL comparator to use inside the namespace_comparator. Defaults to std::greater<T>.
+ * @tparam Allocator The allocator type to use. Default is same as std::map.
  */
 template<class T,
-         template<typename> class Comparator = std::less,
+         template<typename> class Comparator = std::greater,
          class Allocator = std::allocator<std::pair<const quicr::Namespace, T>>>
-using namespace_map = std::map<quicr::Namespace, T, namespace_comparator<Comparator>, Allocator>;
+class namespace_map : public std::map<quicr::Namespace, T, namespace_comparator<Comparator>, Allocator>
+{
+    using base_t = std::map<quicr::Namespace, T, namespace_comparator<Comparator>, Allocator>;
+public:
+    using base_t::base_t;
+};
 } // namespace quicr
