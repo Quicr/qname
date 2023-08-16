@@ -4,30 +4,31 @@
 
 #include <istream>
 #include <map>
+#include <optional>
 #include <ostream>
 
 namespace quicr
 {
 
 /**
- * @brief A prefix for a quicr::Name
+ * @brief A prefix for a Name
  */
 class Namespace
 {
   public:
-    Namespace() = default;
-    constexpr Namespace(const Namespace& ns) = default;
-    Namespace(Namespace&& ns) = default;
+    Namespace() noexcept = default;
+    constexpr Namespace(const Namespace& ns) noexcept = default;
+    Namespace(Namespace&& ns) noexcept = default;
 
-    constexpr Namespace& operator=(const Namespace& other) = default;
-    Namespace& operator=(Namespace&& other) = default;
+    constexpr Namespace& operator=(const Namespace& other) noexcept = default;
+    Namespace& operator=(Namespace&& other) noexcept = default;
 
     /**
      * @brief Construct a namespace from a Name with significant bits to extract.
      * @param name The name that will form the base of the namespace
      * @param sig_bits The amount of bits (from right to left) that are significant.
      */
-    constexpr Namespace(Name name, uint8_t sig_bits)
+    constexpr Namespace(Name name, uint8_t sig_bits) noexcept
       : _name{ name.bits((sizeof(Name) * 8) - sig_bits, sig_bits) }, _sig_bits{ sig_bits }
     {
     }
@@ -54,7 +55,7 @@ class Namespace
      * @param name The name to check.
      * @returns True if the given name is contained within the namespace. False otherwise.
      */
-    constexpr bool contains(const Name& name) const
+    constexpr bool contains(const Name& name) const noexcept
     {
         return name.bits((sizeof(Name) * 8) - _sig_bits, _sig_bits) == _name;
     }
@@ -64,21 +65,21 @@ class Namespace
      * @param prefix The namespace to check.
      * @returns True if the sub-namespace is contained within the current namespace. False otherwise.
      */
-    constexpr bool contains(const Namespace& prefix) const { return contains(prefix._name); }
+    constexpr bool contains(const Namespace& prefix) const noexcept { return contains(prefix._name); }
 
     /**
      * @brief The name of the namespace.
      * @returns The masked name of the namespace, with the insignificant bits set to 0.
      */
-    constexpr Name name() const { return _name; }
+    constexpr Name name() const noexcept { return _name; }
 
     /**
      * @brief The length of the namespace, corresponding directly to the number of significant bits.
      * @returns The significant bits.
      */
-    constexpr uint8_t length() const { return _sig_bits; }
+    constexpr uint8_t length() const noexcept { return _sig_bits; }
 
-    [[deprecated("quicr::Namespace::to_hex is deprecated, use std::string or std::ostream operators")]]
+    [[deprecated("Namespace::to_hex is deprecated, use std::string or std::ostream operators")]]
     std::string to_hex() const
     {
         return std::string(_name) + "/" + std::to_string(_sig_bits);
@@ -89,59 +90,67 @@ class Namespace
     /*=======================================================================*/
 
     /**
-     * Outputs the string version of the Namespace, in the form '0xXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/X'.
+     * Returns a string in the form '0xXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'.
      */
     operator std::string() const { return std::string(_name) + "/" + std::to_string(_sig_bits); }
 
-    constexpr operator Name() const { return name(); }
+    constexpr operator Name() const noexcept { return name(); }
 
     /*=======================================================================*/
     // Comparison Operators
     /*=======================================================================*/
 
-    friend constexpr bool operator==(const Namespace& a, const Namespace& b)
+    friend constexpr bool operator==(const Namespace& a, const Namespace& b) noexcept
     {
         return a._name == b._name && a._sig_bits == b._sig_bits;
     }
 
-    friend constexpr bool operator!=(const Namespace& a, const Namespace& b) { return !(a == b); }
+    friend constexpr bool operator!=(const Namespace& a, const Namespace& b) noexcept { return !(a == b); }
 
-    friend constexpr bool operator>(const Namespace& a, const Namespace& b) { return a._name > b._name; }
+    friend constexpr bool operator>(const Namespace& a, const Namespace& b) noexcept { return a._name > b._name; }
 
-    friend constexpr bool operator>(const Namespace& a, const Name& b)
+    friend constexpr bool operator>(const Namespace& a, const Name& b) noexcept
     {
-        return a._name > quicr::Namespace{ b, a._sig_bits };
+        return a._name > Namespace{ b, a._sig_bits };
     }
 
-    friend constexpr bool operator>(const Name& a, const Namespace& b)
+    friend constexpr bool operator>(const Name& a, const Namespace& b) noexcept
     {
-        return quicr::Namespace{ a, b._sig_bits } > b._name;
+        return Namespace{ a, b._sig_bits } > b._name;
     }
 
-    friend constexpr bool operator>=(const Namespace& a, const Namespace& b) { return !(a < b); }
-    friend constexpr bool operator>=(const Namespace& a, const Name& b) { return !(a < b); }
+    friend constexpr bool operator<(const Namespace& a, const Namespace& b) noexcept { return a._name < b._name; }
 
-    friend constexpr bool operator<(const Namespace& a, const Namespace& b) { return a._name < b._name; }
-
-    friend constexpr bool operator<(const Namespace& a, const Name& b)
+    friend constexpr bool operator<(const Namespace& a, const Name& b) noexcept
     {
-        return a._name < quicr::Namespace{ b, a._sig_bits };
+        return a._name < Namespace{ b, a._sig_bits };
     }
 
-    friend constexpr bool operator<(const Name& a, const Namespace& b)
+    friend constexpr bool operator<(const Name& a, const Namespace& b) noexcept
     {
-        return quicr::Namespace{ a, b._sig_bits } < b._name;
+        return Namespace{ a, b._sig_bits } < b._name;
     }
 
-    friend constexpr bool operator<=(const Namespace& a, const Namespace& b) { return !(a > b); }
-    friend constexpr bool operator<=(const Name& a, const Namespace& b) { return !(a > b); }
+    friend constexpr bool operator>=(const Namespace& a, const Namespace& b) noexcept { return !(a < b); }
+
+    friend constexpr bool operator>=(const Namespace& a, const Name& b) noexcept { return !(a < b); }
+
+    friend constexpr bool operator<=(const Namespace& a, const Namespace& b) noexcept { return !(a > b); }
+
+    friend constexpr bool operator<=(const Name& a, const Namespace& b) noexcept { return !(a > b); }
 
     /*=======================================================================*/
     // Stream Operators
     /*=======================================================================*/
 
+    /**
+     * Outputs a string in the form '0xXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/X'.
+     */
     friend std::ostream& operator<<(std::ostream& os, const Namespace& ns) { return os << std::string(ns); }
 
+    /**
+     * Inputs a string in the form '0xXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/X' into Name
+     */
     friend std::istream& operator>>(std::istream& is, Namespace& name)
     {
         std::string hex;
@@ -188,9 +197,9 @@ class Namespace
  * @brief Namespace comparator capable of comparing Namespaces against Names.
  */
 template<template<typename> class Comp>
-class namespace_comparator : Comp<quicr::Namespace>
+class namespace_comparator_wrapper : Comp<Namespace>
 {
-    using base = Comp<quicr::Namespace>;
+    using base = Comp<Namespace>;
 
   public:
     using is_transparent = std::true_type;
@@ -224,28 +233,26 @@ class namespace_comparator : Comp<quicr::Namespace>
 };
 
 /**
- * @brief A map keyed on quicr::Namespace.
+ * @brief A map keyed on Namespace.
  *
- * A map keyed by quicr::Namespace, and searchable by quicr::Name as well. It
- * is thus possible to use a quicr::Name to retrieve an entry.
- *
- * When indexing using quicr::Name, if the given comparator is std::greater,
- * the entry returned is that which has a key (quicr::Namespace) whose value
- * matches quicr::Name the longest (i.e. most specific namespace). When the
- * comparator is std::less, the entry returned is that which has a key
- * (quicr::Namespace) whose value matches quicr::Name the shortest (i.e. the
- * shortest match)
+ * @details A map keyed by Namespace, and searchable by Name as well. It is thus
+ *          possible to use a Name to retrieve an entry. When indexing using Name,
+ *          if the given comparator is std::greater, the entry returned is that
+ *          which has a key (Namespace) whose value matches Name the longest (i.e.
+ *          most specific namespace). When the comparator is std::less, the entry
+ *          returned is that which has a key (Namespace) whose value matches Name
+ *          the shortest (i.e. the shortest match).
  *
  * @tparam T The value type
- * @tparam Comparator The STL comparator to use inside the namespace_comparator. Defaults to std::greater<T>.
+ * @tparam Comparator The STL comparator to use inside the namespace_comparator_wrapper. Defaults to std::greater<T>.
  * @tparam Allocator The allocator type to use. Default is same as std::map.
  */
 template<class T,
          template<typename> class Comparator = std::greater,
-         class Allocator = std::allocator<std::pair<const quicr::Namespace, T>>>
-class namespace_map : public std::map<quicr::Namespace, T, namespace_comparator<Comparator>, Allocator>
+         class Allocator = std::allocator<std::pair<const Namespace, T>>>
+class namespace_map : public std::map<Namespace, T, namespace_comparator_wrapper<Comparator>, Allocator>
 {
-    using base_t = std::map<quicr::Namespace, T, namespace_comparator<Comparator>, Allocator>;
+    using base_t = std::map<Namespace, T, namespace_comparator_wrapper<Comparator>, Allocator>;
 
   public:
     using base_t::base_t;

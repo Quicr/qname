@@ -65,7 +65,8 @@ class HexEndec
     template<Unsigned... UInt_ts>
     static inline std::string Encode(std::span<uint16_t> distribution, UInt_ts... values)
     {
-        static_assert(Size >= (Dist + ...), "Total bits cannot exceed specified size");
+        if(Size < std::accumulate(distribution.begin(), distribution.end(), 0))
+            throw std::invalid_argument("Total bits cannot exceed specified size");
 
         std::array<uint64_t, sizeof...(UInt_ts)> vals{ values... };
         return Encode(distribution, std::span<uint64_t>(vals));
