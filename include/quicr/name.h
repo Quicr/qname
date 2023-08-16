@@ -187,13 +187,15 @@ class Name
         }
         else if (align_left)
         {
+            _hi = 0;
             std::memcpy(&_hi, data, size_of);
             _lo = 0ull;
         }
         else
         {
             _hi = 0ull;
-            std::memcpy(&_lo, data, size_of);
+            _lo = 0;
+            std::memcpy(&_lo, data, length);
         }
 
         if (align_left) *this <<= (size_of - length) * 8;
