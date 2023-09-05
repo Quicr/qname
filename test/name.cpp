@@ -22,8 +22,8 @@ TEST_CASE("quicr::Name Type Tests")
 
 TEST_CASE("quicr::Name Constructor Tests")
 {
-    constexpr quicr::Name val42(0x42_name);
-    constexpr quicr::Name hex42(0x42_name);
+    quicr::Name val42(0x42_name);
+    quicr::Name hex42(0x42_name);
     CHECK_EQ(val42, hex42);
 
     CHECK_EQ(0x1_name, 0x00000000000000000000000000000001_name);
@@ -42,22 +42,22 @@ TEST_CASE("quicr::Name Constructor Tests")
 TEST_CASE("quicr::Name To Hex Tests")
 {
     {
-        std::string original_hex = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+        std::string_view original_hex = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
         quicr::Name name = original_hex;
 
         CHECK_EQ(std::string(name), original_hex);
     }
     {
-        std::string original_hex = "0xFFFFFFFFFFFFFFFF0000000000000000";
+        std::string_view original_hex = "0xFFFFFFFFFFFFFFFF0000000000000000";
         quicr::Name name = original_hex;
 
         CHECK_EQ(std::string(name), original_hex);
     }
     {
-        std::string long_hex = "0x0000000000000000FFFFFFFFFFFFFFFF";
+        std::string_view long_hex = "0x0000000000000000FFFFFFFFFFFFFFFF";
         quicr::Name long_name = long_hex;
 
-        std::string short_hex = "0xFFFFFFFFFFFFFFFF";
+        std::string_view short_hex = "0xFFFFFFFFFFFFFFFF";
         quicr::Name not_short_name = short_hex;
         CHECK_EQ(std::string(long_name), long_hex);
         CHECK_NE(std::string(not_short_name), short_hex);
@@ -157,8 +157,8 @@ TEST_CASE("quicr::Name Name Arithmetic Tests")
 
 TEST_CASE("quicr::Name Bitwise Not Tests")
 {
-    constexpr quicr::Name zeros = 0x0_name;
-    constexpr quicr::Name ones = ~zeros;
+    quicr::Name zeros = 0x0_name;
+    quicr::Name ones = ~zeros;
 
     quicr::Name expected_ones = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
     auto literal_ones = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;

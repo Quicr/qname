@@ -36,7 +36,6 @@ class Namespace
      * @brief Constructs a namespace from a string.
      * @param str A string of the form '0xXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/X'.
      */
-    Namespace(const std::string& str) : Namespace(std::string_view(str)) {}
     constexpr Namespace(std::string_view str)
     {
         auto delim_pos = str.find_first_of('/');
@@ -47,6 +46,8 @@ class Namespace
 
         _name = _name.bits((sizeof(Name) * 8) - _sig_bits, _sig_bits);
     }
+
+    constexpr Namespace& operator=(std::string_view hex) { return *this = Namespace(hex); }
 
     /**
      * @brief Checks if the given name falls within the namespace.
@@ -245,7 +246,8 @@ template<class T,
 class namespace_map : public std::map<quicr::Namespace, T, namespace_comparator<Comparator>, Allocator>
 {
     using base_t = std::map<quicr::Namespace, T, namespace_comparator<Comparator>, Allocator>;
-public:
+
+  public:
     using base_t::base_t;
 };
 } // namespace quicr
