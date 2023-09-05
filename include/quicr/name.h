@@ -13,8 +13,27 @@
 namespace quicr
 {
 
+/**
+ * @brief A new definition for checking is_integral in the QUICR API.
+ * @tparam T The type to check.
+ */
+template<typename T>
+struct is_integral : std::is_integral<T> {};
+
+/**
+ * @brief Unique to QUICR, defines Name to be an integral type to the QUICR API.
+ */
+template<>
+struct is_integral<class Name> : std::true_type {};
+
+template<typename T>
+constexpr bool is_integral_v = is_integral<T>::value;
+
 template<typename T>
 concept Unsigned = std::is_unsigned_v<T>;
+
+template<typename T>
+concept Integral = quicr::is_integral_v<T>;
 
 namespace
 {
@@ -82,7 +101,7 @@ constexpr UInt_t hex_to_uint(std::string_view hex)
  * @param value The decimal value to convert from.
  * @returns The hexadecimal string of the provided decimal value.
  */
-template<Unsigned UInt_t, typename = typename std::enable_if_t<std::is_unsigned_v<UInt_t>, UInt_t>>
+template<Unsigned UInt_t>
 std::string uint_to_hex(UInt_t value)
 {
     char hex[sizeof(UInt_t) * 2 + 1] = "";
@@ -408,7 +427,7 @@ class Name
      * @param length The number of bits to access. If length == 0, returns 1 bit.
      * @returns The requested bits.
      */
-    template<typename T = Name, typename = typename std::enable_if_t<std::is_unsigned_v<T> || std::is_class_v<Name>>>
+    template<Integral T = Name>
     constexpr T bits(std::uint16_t from, std::uint16_t length = 1) const
     {
         if (length == 0) return 0;
@@ -467,27 +486,6 @@ constexpr Name Name::bits<Name>(std::uint16_t from, std::uint16_t length) const
 
     return *this & (((Name(uint_type(0), uint_type(1)) << length) - 1) << from);
 }
-
-/**
- * @brief A new definition for checking is_integral in the QUICR API.
- * @tparam T The type to check.
- */
-template<typename T>
-struct is_integral : std::is_integral<T>
-{
-};
-
-/**
- * @brief Unique to QUICR, defines Name to be an integral type to the QUICR API.
- */
-template<>
-struct is_integral<Name> : std::true_type
-{
-};
-
-template<typename T>
-constexpr bool is_integral_v = is_integral<T>::value;
-
 } // namespace quicr
 
 /**
