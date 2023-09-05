@@ -400,7 +400,7 @@ class Name
 
     friend constexpr bool operator<=(const Name& a, const Name& b) { return !(a > b); }
 
-    friend constexpr bool operator==(const Name& a, const std::string& b) { return std::string(a) == b; }
+    friend constexpr bool operator==(const Name& a, std::string_view b) { return a == Name(b); }
 
     /*=======================================================================*/
     // Access Operators
