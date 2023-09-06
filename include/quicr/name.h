@@ -190,7 +190,7 @@ class Name
         if (length > sizeof(uint_t))
             *this = Name(uint_t_ptr[0], uint_t_ptr[1]);
         else
-            *this = Name(0ull, uint_t_ptr[0]);
+            *this = Name(uint64_t(0ull), uint_t_ptr[0]);
 
         if (align_left) *this <<= (sizeof(Name) - length) * 8;
     }
