@@ -168,39 +168,67 @@ TEST_CASE("quicr::Name Bitwise Not Tests")
     CHECK_EQ(literal_ones, expected_ones);
 }
 
-TEST_CASE("quicr::Name Byte Array Tests")
+TEST_CASE("quicr::Name Full Byte Array Tests")
 {
-    std::vector<uint8_t> byte_arr(sizeof(quicr::Name));
-    for (size_t i = 0; i < sizeof(quicr::Name) / 2; ++i)
-    {
-        byte_arr[i] = static_cast<uint8_t>(0x0);
-        byte_arr[i + sizeof(quicr::Name) / 2] = static_cast<uint8_t>((0x1000000000000000 >> 8 * i));
-    }
+    const quicr::Name name_to_bytes = 0x10000000000000000000000000000000_name;
+    auto bytes_ptr = reinterpret_cast<uint8_t*>(const_cast<quicr::Name*>(&name_to_bytes));
 
+    std::vector<uint8_t> byte_arr = { bytes_ptr, bytes_ptr + sizeof(quicr::Name) };
     CHECK_FALSE(byte_arr.empty());
     CHECK_EQ(byte_arr.size(), 16);
 
-    quicr::Name name_to_bytes = 0x10000000000000000000000000000000_name;
     quicr::Name name_from_bytes(byte_arr);
     CHECK_EQ(name_from_bytes, name_to_bytes);
 
-    quicr::Name name_from_byte_ptr(byte_arr.data(), byte_arr.size());
+    quicr::Name name_from_byte_ptr(bytes_ptr, sizeof(quicr::Name));
     CHECK_EQ(name_from_byte_ptr, name_to_bytes);
+}
+
+TEST_CASE("quicr::Name Medium Byte Array Tests")
+{
+    const quicr::Name long_name = 0x10000000010000000000000000000000_name;
+    const quicr::Name short_name = 0x1000000001_name;
+
+    std::vector<uint8_t> byte_arr = { 0x01, 0x00, 0x00, 0x00, 0x10 };
+
+    quicr::Name right_aligned_name_from_bytes(byte_arr, false);
+    CHECK_NE(right_aligned_name_from_bytes, long_name);
+    CHECK_EQ(right_aligned_name_from_bytes, short_name);
+
+    quicr::Name left_aligned_name_from_bytes(byte_arr, true);
+    CHECK_EQ(left_aligned_name_from_bytes, long_name);
+    CHECK_NE(left_aligned_name_from_bytes, short_name);
+}
+
+TEST_CASE("quicr::Name Short Byte Array Tests")
+{
+    const quicr::Name long_name = 0x10000000000000000000000000000000_name;
+    const quicr::Name short_name = 0x10_name;
+
+    std::vector<uint8_t> byte_arr = { 0x10 };
+
+    quicr::Name right_aligned_name_from_bytes(byte_arr, false);
+    CHECK_NE(right_aligned_name_from_bytes, long_name);
+    CHECK_EQ(right_aligned_name_from_bytes, short_name);
+
+    quicr::Name left_aligned_name_from_bytes(byte_arr, true);
+    CHECK_EQ(left_aligned_name_from_bytes, long_name);
+    CHECK_NE(left_aligned_name_from_bytes, short_name);
 }
 
 TEST_CASE("quicr::Name Logical Arithmetic Tests")
 {
-    auto arith_and = 0x01010101010101010101010101010101_name & 0x10101010101010101010101010101010_name;
-    CHECK_EQ(arith_and, 0x0_name);
+    auto full_arith_and = 0x01010101010101010101010101010101_name & 0x10101010101010101010101010101010_name;
+    CHECK_EQ(full_arith_and, 0x0_name);
 
-    auto arith_and2 = 0x0101010101010101_name & 0x1010101010101010;
-    CHECK_EQ(arith_and2, 0x0_name);
+    auto short_arith_and = 0x0101010101010101_name & 0x1010101010101010;
+    CHECK_EQ(short_arith_and, 0x0_name);
 
-    auto arith_or = 0x01010101010101010101010101010101_name | 0x10101010101010101010101010101010_name;
-    CHECK_EQ(arith_or, 0x11111111111111111111111111111111_name);
+    auto full_arith_or = 0x01010101010101010101010101010101_name | 0x10101010101010101010101010101010_name;
+    CHECK_EQ(full_arith_or, 0x11111111111111111111111111111111_name);
 
-    auto arith_or2 = 0x0101010101010101_name | 0x1010101010101010;
-    CHECK_EQ(arith_or2, 0x1111111111111111_name);
+    auto short_arith_or = 0x0101010101010101_name | 0x1010101010101010;
+    CHECK_EQ(short_arith_or, 0x1111111111111111_name);
 }
 
 TEST_CASE("quicr::Name Conversion Tests")
