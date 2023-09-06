@@ -12,6 +12,7 @@
 
 namespace quicr
 {
+
 /**
  * @brief Encodes/Decodes a hex string from/into a list of unsigned integers
  *        values.
@@ -33,11 +34,6 @@ namespace quicr
 template<uint16_t Size, uint16_t... Dist>
 class HexEndec
 {
-    template<typename... UInt_ts>
-    struct is_valid_uint : std::bool_constant<(std::is_unsigned_v<UInt_ts> && ...)>
-    {
-    };
-
     static_assert((Size & (Size - 1)) == 0, "Size must be a power of 2");
     static_assert(Size <= sizeof(quicr::Name) * 8, "Size must not exceed sizeof(quicr::Name) * 8");
 
@@ -55,19 +51,19 @@ class HexEndec
      * @returns Hex string containing the provided values distributed according
      * to Dist in order.
      */
-    template<typename... UInt_ts, typename = typename std::enable_if_t<is_valid_uint<UInt_ts...>::value>>
+    template<Unsigned... UInt_ts>
     static inline std::string Encode(UInt_ts... values)
     {
         static_assert(Size == (Dist + ...), "Total bits cannot exceed specified size");
         static_assert(sizeof...(Dist) == sizeof...(UInt_ts), "Number of values should match distribution of bits");
-        static_assert(is_valid_uint<UInt_ts...>::value, "Arguments must all be unsigned integers");
 
         std::array<uint16_t, sizeof...(Dist)> distribution{ Dist... };
-        return Encode(std::span<uint16_t>(distribution), std::forward<UInt_ts>(values)...);
+        std::array<uint64_t, sizeof...(UInt_ts)> vals{ values... };
+        return Encode(distribution, std::span<uint64_t>(vals));
     }
 
-    template<typename... UInt_ts, typename = typename std::enable_if_t<is_valid_uint<UInt_ts...>::value>>
-    static inline std::string Encode(const std::span<uint16_t>& distribution, UInt_ts... values)
+    template<Unsigned... UInt_ts>
+    static inline std::string Encode(std::span<uint16_t> distribution, UInt_ts... values)
     {
         static_assert(Size >= (Dist + ...), "Total bits cannot exceed specified size");
 
@@ -75,7 +71,7 @@ class HexEndec
         return Encode(distribution, std::span<uint64_t>(vals));
     }
 
-    static inline std::string Encode(const std::span<uint16_t>& distribution, const std::span<uint64_t>& values)
+    static inline std::string Encode(std::span<uint16_t> distribution, std::span<uint64_t> values)
     {
         if (distribution.size() != values.size())
             throw std::invalid_argument("Number of values should match distribution of bits");
@@ -105,13 +101,13 @@ class HexEndec
      * @returns Structured binding of values decoded from hex string
      * corresponding in order to the size of Dist.
      */
-    template<typename Uint_t = uint64_t, typename = typename std::enable_if_t<is_valid_uint<Uint_t>::value, Uint_t>>
+    template<Unsigned Uint_t = uint64_t>
     static constexpr std::array<Uint_t, sizeof...(Dist)> Decode(std::string_view hex)
     {
         return Decode<Uint_t>(quicr::Name(hex));
     }
 
-    template<typename Uint_t = uint64_t, typename = typename std::enable_if_t<is_valid_uint<Uint_t>::value, Uint_t>>
+    template<Unsigned Uint_t = uint64_t>
     static constexpr std::array<Uint_t, sizeof...(Dist)> Decode(quicr::Name name)
     {
         static_assert(Size >= (Dist + ...), "Total bits cannot exceed specified size");
@@ -120,8 +116,8 @@ class HexEndec
         return Decode<sizeof...(Dist), Uint_t>(distribution, name);
     }
 
-    template<size_t N, typename Uint_t = uint64_t>
-    static constexpr std::array<Uint_t, N> Decode(const std::span<uint16_t>& distribution, quicr::Name name)
+    template<size_t N, Unsigned Uint_t = uint64_t>
+    static constexpr std::array<Uint_t, N> Decode(std::span<uint16_t> distribution, quicr::Name name)
     {
         const auto dist_size = distribution.size();
         std::array<Uint_t, N> result;
@@ -136,13 +132,13 @@ class HexEndec
         return result;
     }
 
-    template<typename Uint_t = uint64_t, typename = typename std::enable_if_t<is_valid_uint<Uint_t>::value, Uint_t>>
-    static inline std::vector<Uint_t> Decode(const std::span<uint16_t>& distribution, std::string_view hex)
+    template<Unsigned Uint_t = uint64_t>
+    static inline std::vector<Uint_t> Decode(std::span<uint16_t> distribution, std::string_view hex)
     {
         return Decode(distribution, quicr::Name(hex));
     }
 
-    template<typename Uint_t = uint64_t>
+    template<Unsigned Uint_t = uint64_t>
     static inline std::vector<Uint_t> Decode(std::span<uint16_t> distribution, quicr::Name name)
     {
         const auto dist_size = distribution.size();

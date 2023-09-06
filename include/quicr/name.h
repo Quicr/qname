@@ -5,17 +5,35 @@
 #include <cstring>
 #include <istream>
 #include <ostream>
+#include <span>
 #include <stdexcept>
 #include <string>
-#if __cplusplus >= 202002L
-#include <span>
 #include <string_view>
-#else
-#include <vector>
-#endif
 
 namespace quicr
 {
+
+/**
+ * @brief A new definition for checking is_integral in the QUICR API.
+ * @tparam T The type to check.
+ */
+template<typename T>
+struct is_integral : std::is_integral<T> {};
+
+/**
+ * @brief Unique to QUICR, defines Name to be an integral type to the QUICR API.
+ */
+template<>
+struct is_integral<class Name> : std::true_type {};
+
+template<typename T>
+constexpr bool is_integral_v = is_integral<T>::value;
+
+template<typename T>
+concept Unsigned = std::is_unsigned_v<T>;
+
+template<typename T>
+concept Integral = quicr::is_integral_v<T>;
 
 namespace
 {
@@ -26,7 +44,7 @@ namespace
  * @param hex The hexadecimal character to convert.
  * @returns The decimal value of the provided character.
  */
-template<typename UInt_t = std::uint64_t, typename = typename std::enable_if_t<std::is_unsigned_v<UInt_t>>>
+template<Unsigned UInt_t = std::uint64_t>
 constexpr UInt_t hexchar_to_uint(char hex)
 {
     if ('0' <= hex && hex <= '9')
@@ -47,7 +65,7 @@ constexpr UInt_t hexchar_to_uint(char hex)
  * @param value The decimal value to convert.
  * @returns The hexadecimal character of the provided decimal value.
  */
-template<typename UInt_t, typename = typename std::enable_if_t<std::is_unsigned_v<UInt_t>>>
+template<Unsigned UInt_t>
 constexpr char uint_to_hexchar(UInt_t value)
 {
     if (value > 9) return value + 'A' - 10;
@@ -61,7 +79,7 @@ constexpr char uint_to_hexchar(UInt_t value)
  * @param hex The hexadecimal string to convert from.
  * @returns The decimal value of the provided hexadecimal string.
  */
-template<typename UInt_t, typename = typename std::enable_if_t<std::is_unsigned_v<UInt_t>>>
+template<Unsigned UInt_t>
 constexpr UInt_t hex_to_uint(std::string_view hex)
 {
     if (hex.starts_with("0x")) hex.remove_prefix(2);
@@ -83,7 +101,7 @@ constexpr UInt_t hex_to_uint(std::string_view hex)
  * @param value The decimal value to convert from.
  * @returns The hexadecimal string of the provided decimal value.
  */
-template<typename UInt_t, typename = typename std::enable_if_t<std::is_unsigned_v<UInt_t>, UInt_t>>
+template<Unsigned UInt_t>
 std::string uint_to_hex(UInt_t value)
 {
     char hex[sizeof(UInt_t) * 2 + 1] = "";
@@ -124,22 +142,15 @@ class Name
     constexpr Name& operator=(const Name& other) = default;
     Name& operator=(Name&& other) = default;
 
-#if __cplusplus >= 202002L
-    Name(const std::string& hex_value) : Name(std::string_view(hex_value)) {}
     constexpr Name(std::string_view hex_value)
     {
         if (hex_value.starts_with("0x")) hex_value.remove_prefix(2);
-#else
-    Name(const std::string& hex_value)
-    {
-        if (hex_value.substr(0, 2) == "0x") hex_value.erase(0, 2);
-#endif
 
         if (hex_value.length() > sizeof(Name) * 2)
             throw std::invalid_argument("Hex string cannot be longer than " + std::to_string(sizeof(Name) * 2) +
                                         " bytes");
 
-        if (hex_value.length() > sizeof(Name)) [[likely]]
+        if (hex_value.length() > sizeof(Name))
         {
             _hi = hex_to_uint<uint_type>(hex_value.substr(0, hex_value.length() - sizeof(Name)));
             _lo = hex_to_uint<uint_type>(hex_value.substr(hex_value.length() - sizeof(Name), sizeof(Name)));
@@ -150,6 +161,8 @@ class Name
             _lo = hex_to_uint<uint_type>(hex_value.substr(0, hex_value.length()));
         }
     }
+
+    constexpr Name& operator=(std::string_view hex) { return *this = Name(hex); }
 
     /**
      * @brief Constructs a Name from a byte array pointer.
@@ -170,11 +183,7 @@ class Name
         std::memcpy(&_hi, data + size_of, size_of);
     }
 
-#if __cplusplus >= 202002L
-    Name(const std::span<std::uint8_t>& data)
-#else
-    Name(const std::vector<std::uint8_t>& data)
-#endif
+    Name(std::span<std::uint8_t> data)
     {
         if (data.size() > sizeof(Name))
             throw std::invalid_argument("Byte array length (" + std::to_string(data.size()) +
@@ -391,6 +400,8 @@ class Name
 
     friend constexpr bool operator<=(const Name& a, const Name& b) { return !(a > b); }
 
+    friend constexpr bool operator==(const Name& a, std::string_view b) { return a == Name(b); }
+
     /*=======================================================================*/
     // Access Operators
     /*=======================================================================*/
@@ -416,7 +427,7 @@ class Name
      * @param length The number of bits to access. If length == 0, returns 1 bit.
      * @returns The requested bits.
      */
-    template<typename T = Name, typename = typename std::enable_if_t<std::is_unsigned_v<T> || std::is_class_v<Name>>>
+    template<Integral T = Name>
     constexpr T bits(std::uint16_t from, std::uint16_t length = 1) const
     {
         if (length == 0) return 0;
@@ -475,27 +486,6 @@ constexpr Name Name::bits<Name>(std::uint16_t from, std::uint16_t length) const
 
     return *this & (((Name(uint_type(0), uint_type(1)) << length) - 1) << from);
 }
-
-/**
- * @brief A new definition for checking is_integral in the QUICR API.
- * @tparam T The type to check.
- */
-template<typename T>
-struct is_integral : std::is_integral<T>
-{
-};
-
-/**
- * @brief Unique to QUICR, defines Name to be an integral type to the QUICR API.
- */
-template<>
-struct is_integral<Name> : std::true_type
-{
-};
-
-template<typename T>
-constexpr bool is_integral_v = is_integral<T>::value;
-
 } // namespace quicr
 
 /**
