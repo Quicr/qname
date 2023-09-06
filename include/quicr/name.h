@@ -12,6 +12,7 @@
 
 namespace quicr
 {
+// clang-format off
 
 /**
  * @brief A new definition for checking is_integral in the QUICR API.
@@ -34,6 +35,7 @@ concept Unsigned = std::is_unsigned_v<T>;
 
 template<typename T>
 concept Integral = quicr::is_integral_v<T>;
+// clang-format on
 
 namespace
 {
@@ -124,24 +126,27 @@ std::string uint_to_hex(UInt_t value) noexcept
  * @details A Name is defined to be 128 bits, and can almost be used fully as
  *          an integer with arithmetic and logical operators (excluding
  *          multiplication and division operators). It can be constructed from a
- *          hexadecimal string (constexpr), or from a byte array.
+ *          hexadecimal string or a byte array.
  */
 class Name
 {
     using uint_t = std::uint64_t;
 
   private:
+    /**
+     * @brief Private constructor for creating a name from 2 unsigned integers.
+     *
+     * @param hi The high bits of the name.
+     * @param lo The low bits of the name.
+     */
     constexpr explicit Name(uint_t hi, uint_t lo) noexcept : _hi{ hi }, _lo{ lo } {}
 
   public:
     Name() noexcept = default;
     constexpr Name(const Name& other) noexcept = default;
-    Name(Name&& other) noexcept = default;
+    constexpr Name(Name&& other) noexcept = default;
 
-    constexpr Name& operator=(const Name& other) noexcept = default;
-    Name& operator=(Name&& other) noexcept = default;
-
-    constexpr Name(std::string_view hex_value) noexcept(false)
+    constexpr Name(std::string_view hex_value, bool align_left = false) noexcept(false)
     {
         if (hex_value.starts_with("0x")) hex_value.remove_prefix(2);
 
@@ -159,52 +164,56 @@ class Name
             _hi = 0;
             _lo = hex_to_uint<uint_t>(hex_value.substr(0, hex_value.length()));
         }
-    }
 
-    constexpr Name& operator=(std::string_view hex) { return *this = Name(hex); }
+        if (align_left) *this <<= (sizeof(Name) - (hex_value.length() / 2)) * 8;
+    }
 
     /**
      * @brief Constructs a Name from a byte array pointer.
      *
      * @param data The byte array pointer to read from.
      * @param length The length of the byte array pointer. Must NOT be greater.
-     * @param align_left Aligns the bytes to the left (higher bytes). than the sizeof Name.
+     * @param align_left Aligns the bytes to the left (higher bytes)..
      */
-    Name(const std::uint8_t* data, std::size_t length, bool align_left = false) noexcept(false)
+    constexpr Name(const std::uint8_t* data, std::size_t length, bool align_left = false) noexcept(false)
     {
         if (!data) throw std::invalid_argument("Byte array data must not be null");
+
         if (length > sizeof(Name))
+        {
             throw std::invalid_argument("Byte array length (" + std::to_string(length) +
                                         ") cannot be longer than length of Name (" + std::to_string(sizeof(Name)) +
                                         ")");
-
-        constexpr std::size_t size_of = sizeof(uint_t);
-
-        if (length > size_of)
-        {
-            std::memcpy(&_hi, data, length - size_of);
-            std::memcpy(&_lo, data + (length - size_of), size_of);
         }
-        else if (align_left)
-        {
-            _hi = 0;
-            std::memcpy(&_hi, data, size_of);
-            _lo = 0ull;
-        }
+
+        auto uint_t_ptr = reinterpret_cast<const uint_t*>(data);
+        if (length > sizeof(uint_t))
+            *this = Name(uint_t_ptr[0], uint_t_ptr[1]);
         else
-        {
-            _hi = 0ull;
-            _lo = 0;
-            std::memcpy(&_lo, data, length);
-        }
+            *this = Name(0ull, uint_t_ptr[0]);
 
-        if (align_left) *this <<= (size_of - length) * 8;
+        if (align_left) *this <<= (sizeof(Name) - length) * 8;
     }
 
-    Name(std::span<std::uint8_t> data, bool align_left = false) noexcept(false)
+    /**
+     * @brief Constructs a Name from a byte range.
+     *
+     * @param data The byte range to read from.
+     * @param align_left Aligns the bytes to the left (higher bytes).
+     */
+    constexpr Name(std::span<std::uint8_t> data, bool align_left = false) noexcept(false)
       : Name(data.data(), data.size(), align_left)
     {
     }
+
+    /*=======================================================================*/
+    // Assignment Operators
+    /*=======================================================================*/
+
+    constexpr Name& operator=(const Name& other) noexcept = default;
+    constexpr Name& operator=(Name&& other) noexcept = default;
+    constexpr Name& operator=(std::string_view hex) noexcept(false) { return *this = Name(hex); }
+    constexpr Name& operator=(std::span<std::uint8_t> data) noexcept(false) { return *this = Name(data); }
 
     /*=======================================================================*/
     // Conversion Operators
@@ -222,23 +231,16 @@ class Name
         return hex;
     }
 
-    explicit constexpr operator std::uint8_t() const noexcept { return _lo; }
-    explicit constexpr operator std::uint16_t() const noexcept { return _lo; }
-    explicit constexpr operator std::uint32_t() const noexcept { return _lo; }
+    explicit constexpr operator std::uint8_t() const noexcept { return std::uint8_t(_lo); }
+    explicit constexpr operator std::uint16_t() const noexcept { return std::uint16_t(_lo); }
+    explicit constexpr operator std::uint32_t() const noexcept { return std::uint32_t(_lo); }
     explicit constexpr operator std::uint64_t() const noexcept { return _lo; }
 
     /*=======================================================================*/
     // Arithmetic Operators
     /*=======================================================================*/
 
-    constexpr Name& operator+=(uint_t value) noexcept
-    {
-        if (_lo + value < _lo) ++_hi;
-        _lo += value;
-
-        return *this;
-    }
-
+    constexpr Name& operator+=(uint_t value) noexcept { return *this = Name(_hi + !!(_lo + value < _lo), _lo + value); }
     constexpr Name& operator+=(Name value) noexcept
     {
         *this += value._lo;
@@ -247,14 +249,7 @@ class Name
         return *this;
     }
 
-    constexpr Name& operator-=(uint_t value) noexcept
-    {
-        if (_lo - value > _lo) --_hi;
-        _lo -= value;
-
-        return *this;
-    }
-
+    constexpr Name& operator-=(uint_t value) noexcept { return *this = Name(_hi - !!(_lo - value > _lo), _lo - value); }
     constexpr Name& operator-=(Name value) noexcept
     {
         if (_hi - value._hi > _hi)
@@ -313,8 +308,7 @@ class Name
 
         if (value < sizeof(uint_t) * 8)
         {
-            _lo = _lo >> value;
-            _lo |= _hi << (sizeof(uint_t) * 8 - value);
+            _lo = (_lo >> value) | (_hi << (sizeof(uint_t) * 8 - value));
             _hi = _hi >> value;
         }
         else
@@ -326,16 +320,13 @@ class Name
         return *this;
     }
 
-    constexpr Name operator>>(uint16_t value) const noexcept { return Name(*this) >>= value; }
-
     constexpr Name& operator<<=(uint16_t value) noexcept
     {
         if (value == 0) return *this;
 
         if (value < sizeof(uint_t) * 8)
         {
-            _hi = _hi << value;
-            _hi |= _lo >> (sizeof(uint_t) * 8 - value);
+            _hi = (_hi << value) | (_lo >> (sizeof(uint_t) * 8 - value));
             _lo = _lo << value;
         }
         else
@@ -347,15 +338,12 @@ class Name
         return *this;
     }
 
+    constexpr Name operator>>(uint16_t value) const noexcept { return Name(*this) >>= value; }
     constexpr Name operator<<(uint16_t value) const noexcept { return Name(*this) <<= value; }
 
     /*=======================================================================*/
     // Comparison Operators
     /*=======================================================================*/
-
-    friend constexpr bool operator==(const Name& a, const Name& b) noexcept { return a._hi == b._hi && a._lo == b._lo; }
-
-    friend constexpr bool operator!=(const Name& a, const Name& b) noexcept { return !(a == b); }
 
     friend constexpr bool operator>(const Name& a, const Name& b) noexcept
     {
@@ -371,11 +359,13 @@ class Name
         return a._lo < b._lo;
     }
 
+    friend constexpr bool operator==(const Name& a, const Name& b) noexcept { return a._hi == b._hi && a._lo == b._lo; }
+    friend constexpr bool operator!=(const Name& a, const Name& b) noexcept { return !(a == b); }
     friend constexpr bool operator>=(const Name& a, const Name& b) noexcept { return !(a < b); }
-
     friend constexpr bool operator<=(const Name& a, const Name& b) noexcept { return !(a > b); }
 
-    friend constexpr bool operator==(const Name& a, std::string_view b) { return a == Name(b); }
+    friend constexpr bool operator==(const Name& a, std::string_view b) noexcept { return a == Name(b); }
+    friend constexpr bool operator!=(const Name& a, std::string_view b) noexcept { return a != Name(b); }
 
     /*=======================================================================*/
     // Access Operators

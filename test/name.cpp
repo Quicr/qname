@@ -184,6 +184,22 @@ TEST_CASE("quicr::Name Full Byte Array Tests")
     CHECK_EQ(name_from_byte_ptr, name_to_bytes);
 }
 
+TEST_CASE("quicr::Name Medium Byte Array Tests")
+{
+    const quicr::Name long_name = 0x10000000010000000000000000000000_name;
+    const quicr::Name short_name = 0x1000000001_name;
+
+    std::vector<uint8_t> byte_arr = { 0x01, 0x00, 0x00, 0x00, 0x10 };
+
+    quicr::Name right_aligned_name_from_bytes(byte_arr, false);
+    CHECK_NE(right_aligned_name_from_bytes, long_name);
+    CHECK_EQ(right_aligned_name_from_bytes, short_name);
+
+    quicr::Name left_aligned_name_from_bytes(byte_arr, true);
+    CHECK_EQ(left_aligned_name_from_bytes, long_name);
+    CHECK_NE(left_aligned_name_from_bytes, short_name);
+}
+
 TEST_CASE("quicr::Name Short Byte Array Tests")
 {
     const quicr::Name long_name = 0x10000000000000000000000000000000_name;
