@@ -176,6 +176,7 @@ class Name
      * @param align_left Aligns the bytes to the left (higher bytes)..
      */
     constexpr Name(const std::uint8_t* data, std::size_t length, bool align_left = false) noexcept(false)
+      : _hi{ 0 }, _lo{ 0 }
     {
         if (!data) throw std::invalid_argument("Byte array data must not be null");
 
