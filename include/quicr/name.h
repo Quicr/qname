@@ -189,9 +189,12 @@ class Name
 
         auto uint_t_ptr = reinterpret_cast<const uint_t*>(data);
         if (length > sizeof(uint_t))
-            *this = Name(uint_t_ptr[0], uint_t_ptr[1]);
+        {
+            std::memcpy(&_hi, data, length - sizeof(uint_t));
+            _lo = uint_t_ptr[1];
+        }
         else
-            *this = Name(uint64_t(0ull), uint_t_ptr[0]);
+            std::memcpy(&_lo, data, length);
 
         if (align_left) *this <<= (sizeof(Name) - length) * 8;
     }
