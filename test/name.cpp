@@ -229,6 +229,28 @@ TEST_CASE("quicr::Name Logical Arithmetic Tests")
 
     auto short_arith_or = 0x0101010101010101_name | 0x1010101010101010;
     CHECK_EQ(short_arith_or, 0x1111111111111111_name);
+
+    auto mask = 0xFFFFFFFFFFFFFFFF_name;
+    CHECK_EQ(~mask, 0xFFFFFFFFFFFFFFFF0000000000000000_name);
+    mask = ~mask;
+
+    {
+        auto some_name = 0xABCDEFABCDEF01234567890123456789_name;
+        some_name &= mask;
+        CHECK_EQ(some_name, 0xABCDEFABCDEF01230000000000000000_name);
+    }
+
+    {
+        auto some_name = 0xABCDEFABCDEF01234567890123456789_name;
+        some_name |= mask;
+        CHECK_EQ(some_name, 0xFFFFFFFFFFFFFFFF4567890123456789_name);
+    }
+
+    {
+        auto some_name = 0xABCDEFABCDEF01234567890123456789_name;
+        some_name ^= mask;
+        CHECK_EQ(some_name, 0x543210543210FEDC4567890123456789_name);
+    }
 }
 
 TEST_CASE("quicr::Name Conversion Tests")

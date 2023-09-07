@@ -300,8 +300,8 @@ class Name
     constexpr Name operator^(const Name& other) const noexcept { return Name(_hi ^ other._hi, _lo ^ other._lo); }
     constexpr Name operator~() const noexcept { return Name(~_hi, ~_lo); }
 
-    constexpr Name& operator&=(uint_t value) noexcept { return *this = *this | value; }
-    constexpr Name& operator&=(const Name& other) noexcept { return *this = *this | other; }
+    constexpr Name& operator&=(uint_t value) noexcept { return *this = *this & value; }
+    constexpr Name& operator&=(const Name& other) noexcept { return *this = *this & other; }
     constexpr Name& operator|=(uint_t value) noexcept { return *this = *this | value; }
     constexpr Name& operator|=(const Name& other) noexcept { return *this = *this | other; }
     constexpr Name& operator^=(const Name& other) noexcept { return *this = *this ^ other; }
