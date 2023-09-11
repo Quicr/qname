@@ -216,6 +216,31 @@ TEST_CASE("quicr::Name Short Byte Array Tests")
     CHECK_NE(left_aligned_name_from_bytes, short_name);
 }
 
+TEST_CASE("quicr::Name Integer Byte Array Tests")
+{
+    uint64_t i = 0x123456;
+    uint8_t* i_ptr = reinterpret_cast<uint8_t*>(&i);
+    std::vector<uint8_t> byte_arr = { 0x56, 0x34, 0x12 };
+
+    {
+        quicr::Name right_aligned_name_from_bytes(i_ptr, 3, false);
+        CHECK_EQ(right_aligned_name_from_bytes, 0x00000000000000000000000000123456_name);
+    }
+    {
+        quicr::Name right_aligned_name_from_bytes(byte_arr, false);
+        CHECK_EQ(right_aligned_name_from_bytes, 0x00000000000000000000000000123456_name);
+    }
+
+    {
+        quicr::Name left_aligned_name_from_bytes(i_ptr, 3, true);
+        CHECK_EQ(left_aligned_name_from_bytes, 0x12345600000000000000000000000000_name);
+    }
+    {
+        quicr::Name left_aligned_name_from_bytes(byte_arr, true);
+        CHECK_EQ(left_aligned_name_from_bytes, 0x12345600000000000000000000000000_name);
+    }
+}
+
 TEST_CASE("quicr::Name Logical Arithmetic Tests")
 {
     auto full_arith_and = 0x01010101010101010101010101010101_name & 0x10101010101010101010101010101010_name;

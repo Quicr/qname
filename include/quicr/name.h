@@ -139,7 +139,7 @@ class Name
      * @param hi The high bits of the name.
      * @param lo The low bits of the name.
      */
-    constexpr explicit Name(uint_t hi, uint_t lo) noexcept : _hi{ hi }, _lo{ lo } {}
+    constexpr explicit Name(uint_t hi, uint_t lo) noexcept : _lo{ lo }, _hi{ hi } {}
 
   public:
     Name() noexcept = default;
@@ -175,8 +175,8 @@ class Name
      * @param length The length of the byte array pointer. Must NOT be greater.
      * @param align_left Aligns the bytes to the left (higher bytes)..
      */
-    constexpr Name(const std::uint8_t* data, std::size_t length, bool align_left = false) noexcept(false)
-      : _hi{ 0 }, _lo{ 0 }
+    Name(const std::uint8_t* data, std::size_t length, bool align_left = false) noexcept(false)
+      : _lo{ 0 }, _hi{ 0 }
     {
         if (!data) throw std::invalid_argument("Byte array data must not be null");
 
@@ -187,11 +187,10 @@ class Name
                                         ")");
         }
 
-        auto uint_t_ptr = reinterpret_cast<const uint_t*>(data);
         if (length > sizeof(uint_t))
         {
-            std::memcpy(&_hi, data, length - sizeof(uint_t));
-            _lo = uint_t_ptr[1];
+            std::memcpy(&_hi, data + sizeof(uint_t), length - sizeof(uint_t));
+            std::memcpy(&_lo, data , sizeof(uint_t));
         }
         else
             std::memcpy(&_lo, data, length);
@@ -205,7 +204,7 @@ class Name
      * @param data The byte range to read from.
      * @param align_left Aligns the bytes to the left (higher bytes).
      */
-    constexpr Name(std::span<std::uint8_t> data, bool align_left = false) noexcept(false)
+    Name(std::span<std::uint8_t> data, bool align_left = false) noexcept(false)
       : Name(data.data(), data.size(), align_left)
     {
     }
@@ -217,7 +216,6 @@ class Name
     constexpr Name& operator=(const Name& other) noexcept = default;
     constexpr Name& operator=(Name&& other) noexcept = default;
     constexpr Name& operator=(std::string_view hex) noexcept(false) { return *this = Name(hex); }
-    constexpr Name& operator=(std::span<std::uint8_t> data) noexcept(false) { return *this = Name(data); }
 
     /*=======================================================================*/
     // Conversion Operators
@@ -432,8 +430,8 @@ class Name
     }
 
   private:
-    uint_t _hi;
     uint_t _lo;
+    uint_t _hi;
 };
 
 /**
