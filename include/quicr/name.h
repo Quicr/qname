@@ -173,7 +173,9 @@ class Name
      *
      * @param data The byte array pointer to read from.
      * @param length The length of the byte array pointer. Must NOT be greater.
-     * @param align_left Aligns the bytes to the left (higher bytes)..
+     * @param align_left Aligns the bytes to the left (higher bytes).
+     *
+     * Note: The ordering of the byte array MUST conform to the endianness of the machine.
      */
     Name(const std::uint8_t* data, std::size_t length, bool align_left = false) noexcept(false)
       : _lo{ 0 }, _hi{ 0 }
