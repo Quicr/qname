@@ -15,6 +15,34 @@ namespace quicr
  */
 class Namespace
 {
+    /**
+     * @brief Static helper method for converting charater to decimal value at compile-time.
+     * @param dec The decimal character to convert.
+     * @returns The decimal value of the digit character.
+     */
+    static constexpr uint8_t char_to_uint(char dec)
+    {
+        if ('0' <= dec && dec <= '9') return dec - '0';
+        return 0;
+    }
+
+    /**
+     * @brief Static helper function to convert a string to a decimal value at compile-time.
+     * @param dec The decimal string to convert.
+     * @returns The decimal value of the given string.
+     */
+    static constexpr uint8_t str_to_uint(std::string_view dec)
+    {
+        uint8_t value = 0;
+        for (std::size_t i = 0; i < dec.length(); ++i)
+        {
+            value *= 10u;
+            value += char_to_uint(dec[i]);
+        }
+
+        return value;
+    }
+
   public:
     Namespace() noexcept = default;
     constexpr Namespace(const Namespace& ns) noexcept = default;
@@ -78,12 +106,6 @@ class Namespace
      * @returns The significant bits.
      */
     constexpr uint8_t length() const noexcept { return _sig_bits; }
-
-    [[deprecated("Namespace::to_hex is deprecated, use std::string or std::ostream operators")]]
-    std::string to_hex() const
-    {
-        return std::string(_name) + "/" + std::to_string(_sig_bits);
-    }
 
     /*=======================================================================*/
     // Conversion Operators
@@ -151,41 +173,12 @@ class Namespace
     /**
      * Inputs a string in the form '0xXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/X' into Name
      */
-    friend std::istream& operator>>(std::istream& is, Namespace& name)
+    friend std::istream& operator>>(std::istream& is, Namespace& ns)
     {
         std::string hex;
         is >> hex;
-        name = hex;
+        ns = hex;
         return is;
-    }
-
-  private:
-    /**
-     * @brief Static helper method for converting charater to decimal value at compile-time.
-     * @param dec The decimal character to convert.
-     * @returns The decimal value of the digit character.
-     */
-    static constexpr uint8_t char_to_uint(char dec)
-    {
-        if ('0' <= dec && dec <= '9') return dec - '0';
-        return 0;
-    }
-
-    /**
-     * @brief Static helper function to convert a string to a decimal value at compile-time.
-     * @param dec The decimal string to convert.
-     * @returns The decimal value of the given string.
-     */
-    static constexpr uint8_t str_to_uint(std::string_view dec)
-    {
-        uint8_t value = 0;
-        for (std::size_t i = 0; i < dec.length(); ++i)
-        {
-            value *= 10u;
-            value += char_to_uint(dec[i]);
-        }
-
-        return value;
     }
 
   private:

@@ -1,6 +1,6 @@
 #include <benchmark/benchmark.h>
 
-#include <quicr_name>
+#include <qname>
 #include <vector>
 
 static void Name_ConstructFrom_String(benchmark::State& state)

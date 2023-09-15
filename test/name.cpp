@@ -15,9 +15,7 @@ TEST_CASE("quicr::Name Type Tests")
     CHECK(std::is_trivially_copy_assignable_v<quicr::Name>);
     CHECK(std::is_trivially_move_constructible_v<quicr::Name>);
     CHECK(std::is_trivially_move_assignable_v<quicr::Name>);
-
-    CHECK_FALSE(std::is_integral_v<quicr::Name>);
-    CHECK(quicr::is_integral_v<quicr::Name>);
+    CHECK_EQ(sizeof(quicr::Name), sizeof(std::uint64_t) * 2);
 }
 
 TEST_CASE("quicr::Name Constructor Tests")
@@ -191,13 +189,9 @@ TEST_CASE("quicr::Name Medium Byte Array Tests")
 
     std::vector<uint8_t> byte_arr = { 0x01, 0x00, 0x00, 0x00, 0x10 };
 
-    quicr::Name right_aligned_name_from_bytes(byte_arr, false);
-    CHECK_NE(right_aligned_name_from_bytes, long_name);
-    CHECK_EQ(right_aligned_name_from_bytes, short_name);
-
-    quicr::Name left_aligned_name_from_bytes(byte_arr, true);
-    CHECK_EQ(left_aligned_name_from_bytes, long_name);
-    CHECK_NE(left_aligned_name_from_bytes, short_name);
+    quicr::Name name_from_bytes(byte_arr);
+    CHECK_NE(name_from_bytes, long_name);
+    CHECK_EQ(name_from_bytes, short_name);
 }
 
 TEST_CASE("quicr::Name Short Byte Array Tests")
@@ -207,37 +201,24 @@ TEST_CASE("quicr::Name Short Byte Array Tests")
 
     std::vector<uint8_t> byte_arr = { 0x10 };
 
-    quicr::Name right_aligned_name_from_bytes(byte_arr, false);
-    CHECK_NE(right_aligned_name_from_bytes, long_name);
-    CHECK_EQ(right_aligned_name_from_bytes, short_name);
-
-    quicr::Name left_aligned_name_from_bytes(byte_arr, true);
-    CHECK_EQ(left_aligned_name_from_bytes, long_name);
-    CHECK_NE(left_aligned_name_from_bytes, short_name);
+    quicr::Name name_from_bytes(byte_arr);
+    CHECK_NE(name_from_bytes, long_name);
+    CHECK_EQ(name_from_bytes, short_name);
 }
 
 TEST_CASE("quicr::Name Integer Byte Array Tests")
 {
-    uint64_t i = 0x123456;
-    uint8_t* i_ptr = reinterpret_cast<uint8_t*>(&i);
-    std::vector<uint8_t> byte_arr = { 0x56, 0x34, 0x12 };
-
     {
-        quicr::Name right_aligned_name_from_bytes(i_ptr, 3, false);
-        CHECK_EQ(right_aligned_name_from_bytes, 0x00000000000000000000000000123456_name);
-    }
-    {
-        quicr::Name right_aligned_name_from_bytes(byte_arr, false);
-        CHECK_EQ(right_aligned_name_from_bytes, 0x00000000000000000000000000123456_name);
+        uint64_t i = 0x123456;
+        uint8_t* i_ptr = reinterpret_cast<uint8_t*>(&i);
+        quicr::Name name_from_bytes(i_ptr, 3);
+        CHECK_EQ(name_from_bytes, 0x00000000000000000000000000123456_name);
     }
 
     {
-        quicr::Name left_aligned_name_from_bytes(i_ptr, 3, true);
-        CHECK_EQ(left_aligned_name_from_bytes, 0x12345600000000000000000000000000_name);
-    }
-    {
-        quicr::Name left_aligned_name_from_bytes(byte_arr, true);
-        CHECK_EQ(left_aligned_name_from_bytes, 0x12345600000000000000000000000000_name);
+        std::vector<uint8_t> byte_arr = { 0x56, 0x34, 0x12 };
+        quicr::Name name_from_bytes(byte_arr);
+        CHECK_EQ(name_from_bytes, 0x00000000000000000000000000123456_name);
     }
 }
 
@@ -287,7 +268,7 @@ TEST_CASE("quicr::Name Conversion Tests")
     CHECK_EQ(std::uint32_t(name), 0xFFFFFFFF);
     CHECK_EQ(std::uint64_t(name), 0xFFFFFFFFFFFFFFFF);
 
-    CHECK_EQ(name, std::string("0x000000000000FFFFFFFFFFFFFFFFFFFF"));
+    CHECK_EQ(std::string(name), "0x000000000000FFFFFFFFFFFFFFFFFFFF");
 }
 
 TEST_CASE("quicr::Name Extract Bits Tests")

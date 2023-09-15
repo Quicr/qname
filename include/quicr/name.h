@@ -1,5 +1,8 @@
 #pragma once
 
+#include "_utilities.h"
+
+#include <concepts>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -12,113 +15,9 @@
 
 namespace quicr
 {
-// clang-format off
-
-/**
- * @brief A new definition for checking is_integral in the QUICR API.
- * @tparam T The type to check.
- */
-template<typename T>
-struct is_integral : std::is_integral<T> {};
-
-/**
- * @brief Unique to QUICR, defines Name to be an integral type to the QUICR API.
- */
-template<>
-struct is_integral<class Name> : std::true_type {};
 
 template<typename T>
-constexpr bool is_integral_v = is_integral<T>::value;
-
-template<typename T>
-concept Unsigned = std::is_unsigned_v<T>;
-
-template<typename T>
-concept Integral = quicr::is_integral_v<T>;
-// clang-format on
-
-namespace
-{
-/**
- * @brief Converts a hexadecimal character to it's decimal value.
- *
- * @tparam UInt_t The unsigned integer type to convert to.
- * @param hex The hexadecimal character to convert.
- * @returns The decimal value of the provided character.
- */
-template<Unsigned UInt_t = std::uint64_t>
-constexpr UInt_t hexchar_to_uint(char hex) noexcept
-{
-    if ('0' <= hex && hex <= '9')
-        return hex - '0';
-    else if ('A' <= hex && hex <= 'F')
-        return hex - 'A' + 10;
-    else if ('a' <= hex && hex <= 'f')
-        return hex - 'a' + 10;
-
-    return 0;
-}
-
-/**
- * @brief Converts an unsigned integer decimal value into a hexidecimal
- * character.
- *
- * @tparam UInt_t The unsigned integer type to convert from.
- * @param value The decimal value to convert.
- * @returns The hexadecimal character of the provided decimal value.
- */
-template<Unsigned UInt_t>
-constexpr char uint_to_hexchar(UInt_t value) noexcept
-{
-    if (value > 9) return value + 'A' - 10;
-    return value + '0';
-}
-
-/**
- * @brief Converts a hexidecimal string to an unsigned integer decimal value.
- *
- * @tparam UInt_t The unsigned integer type to convert to.
- * @param hex The hexadecimal string to convert from.
- * @returns The decimal value of the provided hexadecimal string.
- */
-template<Unsigned UInt_t>
-constexpr UInt_t hex_to_uint(std::string_view hex) noexcept
-{
-    if (hex.starts_with("0x")) hex.remove_prefix(2);
-
-    UInt_t value = 0;
-    for (std::size_t i = 0; i < hex.length(); ++i)
-    {
-        value *= 16ull;
-        value += hexchar_to_uint<UInt_t>(hex[i]);
-    }
-
-    return value;
-}
-
-/**
- * @brief Converts an unsigned integer to a hexadecimal string.
- *
- * @tparam UInt_t The unsigned integer type to convert from.
- * @param value The decimal value to convert from.
- * @returns The hexadecimal string of the provided decimal value.
- */
-template<Unsigned UInt_t>
-std::string uint_to_hex(UInt_t value) noexcept
-{
-    char hex[sizeof(UInt_t) * 2 + 1] = "";
-    for (int i = sizeof(UInt_t) * 2 - 1; i >= 0; --i)
-    {
-        UInt_t b = value & 0x0F;
-        hex[i] = uint_to_hexchar(b);
-        value -= b;
-        value /= 16;
-    }
-    hex[sizeof(UInt_t) * 2] = '\0';
-
-    return hex;
-}
-} // namespace
+concept UnsignedOrName = std::unsigned_integral<T> || std::is_same_v<T, class Name>;
 
 /**
  * @brief Unsigned 128 bit number which can be created from strings or byte arrays.
@@ -146,7 +45,7 @@ class Name
     constexpr Name(const Name& other) noexcept = default;
     constexpr Name(Name&& other) noexcept = default;
 
-    constexpr Name(std::string_view hex_value, bool align_left = false) noexcept(false)
+    constexpr Name(std::string_view hex_value) noexcept(false)
     {
         if (hex_value.starts_with("0x")) hex_value.remove_prefix(2);
 
@@ -156,16 +55,14 @@ class Name
 
         if (hex_value.length() > sizeof(Name))
         {
-            _hi = hex_to_uint<uint_t>(hex_value.substr(0, hex_value.length() - sizeof(Name)));
-            _lo = hex_to_uint<uint_t>(hex_value.substr(hex_value.length() - sizeof(Name), sizeof(Name)));
+            _hi = utility::hex_to_unsigned<uint_t>(hex_value.substr(0, hex_value.length() - sizeof(Name)));
+            _lo = utility::hex_to_unsigned<uint_t>(hex_value.substr(hex_value.length() - sizeof(Name), sizeof(Name)));
         }
         else
         {
             _hi = 0;
-            _lo = hex_to_uint<uint_t>(hex_value.substr(0, hex_value.length()));
+            _lo = utility::hex_to_unsigned<uint_t>(hex_value.substr(0, hex_value.length()));
         }
-
-        if (align_left) *this <<= (sizeof(Name) - (hex_value.length() / 2)) * 8;
     }
 
     /**
@@ -173,43 +70,34 @@ class Name
      *
      * @param data The byte array pointer to read from.
      * @param length The length of the byte array pointer. Must NOT be greater.
-     * @param align_left Aligns the bytes to the left (higher bytes).
      *
      * Note: The ordering of the byte array MUST conform to the endianness of the machine.
      */
-    Name(const std::uint8_t* data, std::size_t length, bool align_left = false) noexcept(false)
-      : _lo{ 0 }, _hi{ 0 }
+    Name(const std::uint8_t* data, std::size_t size) noexcept(false) : _lo{ 0 }, _hi{ 0 }
     {
         if (!data) throw std::invalid_argument("Byte array data must not be null");
 
-        if (length > sizeof(Name))
+        if (size > sizeof(Name))
         {
-            throw std::invalid_argument("Byte array length (" + std::to_string(length) +
-                                        ") cannot be longer than length of Name (" + std::to_string(sizeof(Name)) +
-                                        ")");
+            throw std::invalid_argument("Byte array size (" + std::to_string(size) + ") cannot exceed size of Name (" +
+                                        std::to_string(sizeof(Name)) + ")");
         }
 
-        if (length > sizeof(uint_t))
+        if (size > sizeof(uint_t))
         {
-            std::memcpy(&_hi, data + sizeof(uint_t), length - sizeof(uint_t));
-            std::memcpy(&_lo, data , sizeof(uint_t));
+            std::memcpy(&_hi, data + sizeof(uint_t), size - sizeof(uint_t));
+            std::memcpy(&_lo, data, sizeof(uint_t));
         }
         else
-            std::memcpy(&_lo, data, length);
-
-        if (align_left) *this <<= (sizeof(Name) - length) * 8;
+            std::memcpy(&_lo, data, size);
     }
 
     /**
      * @brief Constructs a Name from a byte range.
      *
      * @param data The byte range to read from.
-     * @param align_left Aligns the bytes to the left (higher bytes).
      */
-    Name(std::span<std::uint8_t> data, bool align_left = false) noexcept(false)
-      : Name(data.data(), data.size(), align_left)
-    {
-    }
+    Name(std::span<std::uint8_t> data) noexcept(false) : Name(data.data(), data.size()) {}
 
     /*=======================================================================*/
     // Assignment Operators
@@ -228,16 +116,12 @@ class Name
      */
     operator std::string() const noexcept
     {
-        std::string hex = "0x";
-        hex += uint_to_hex(_hi);
-        hex += uint_to_hex(_lo);
-
-        return hex;
+        return "0x" + utility::unsigned_to_hex(_hi) + utility::unsigned_to_hex(_lo);
     }
 
-    explicit constexpr operator std::uint8_t() const noexcept { return std::uint8_t(_lo); }
-    explicit constexpr operator std::uint16_t() const noexcept { return std::uint16_t(_lo); }
-    explicit constexpr operator std::uint32_t() const noexcept { return std::uint32_t(_lo); }
+    explicit constexpr operator std::uint8_t() const noexcept { return static_cast<std::uint8_t>(_lo); }
+    explicit constexpr operator std::uint16_t() const noexcept { return static_cast<std::uint16_t>(_lo); }
+    explicit constexpr operator std::uint32_t() const noexcept { return static_cast<std::uint32_t>(_lo); }
     explicit constexpr operator std::uint64_t() const noexcept { return _lo; }
 
     /*=======================================================================*/
@@ -368,9 +252,6 @@ class Name
     friend constexpr bool operator>=(const Name& a, const Name& b) noexcept { return !(a < b); }
     friend constexpr bool operator<=(const Name& a, const Name& b) noexcept { return !(a > b); }
 
-    friend constexpr bool operator==(const Name& a, std::string_view b) noexcept { return a == Name(b); }
-    friend constexpr bool operator!=(const Name& a, std::string_view b) noexcept { return a != Name(b); }
-
     /*=======================================================================*/
     // Access Operators
     /*=======================================================================*/
@@ -396,7 +277,7 @@ class Name
      * @param length The number of bits to access. If length == 0, returns 1 bit.
      * @returns The requested bits.
      */
-    template<Integral T = Name>
+    template<UnsignedOrName T = Name>
     constexpr T bits(std::uint16_t from, std::uint16_t length = 1) const
     {
         if (length == 0) return 0;
@@ -405,16 +286,6 @@ class Name
             throw std::domain_error("length is greater than 64 bits, did you mean to use Name?");
 
         return T((*this & (((Name(uint_t(0), uint_t(1)) << length) - 1) << from)) >> from);
-    }
-
-    [[deprecated("quicr::Name::to_hex is deprecated, use std::string or std::ostream operators")]]
-    std::string to_hex() const noexcept
-    {
-        std::string hex = "0x";
-        hex += uint_to_hex(_hi);
-        hex += uint_to_hex(_lo);
-
-        return hex;
     }
 
     /*=======================================================================*/

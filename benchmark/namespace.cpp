@@ -1,6 +1,6 @@
 #include <benchmark/benchmark.h>
 
-#include <quicr_name>
+#include <qname>
 #include <vector>
 
 static void Namespace_ConstructFrom_Name(benchmark::State& state)

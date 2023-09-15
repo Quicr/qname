@@ -1,6 +1,6 @@
 #include <doctest/doctest.h>
 
-#include <quicr_name>
+#include <qname>
 
 TEST_CASE("quicr::HexEndec 128bit Encode/Decode Test")
 {
@@ -84,7 +84,7 @@ TEST_CASE("quicr::HexEndec Name Encode/Decode Test")
 
     quicr::HexEndec<128, 64, 56, 8> formatter_128bit;
     const std::string mask = formatter_128bit.Encode(first_part, second_part, third_part);
-    CHECK_EQ(mask, name);
+    CHECK_EQ(mask, std::string(name));
 
     const auto [one, two, three] = formatter_128bit.Decode(name);
     CHECK_EQ(one, first_part);
