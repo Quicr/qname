@@ -1,9 +1,11 @@
 #pragma once
 
-#include <quicr/name.h>
+#include "_utilities.h"
+#include "name.h"
 
 #include <algorithm>
 #include <array>
+#include <concepts>
 #include <cstdint>
 #include <numeric>
 #include <span>
@@ -12,7 +14,6 @@
 
 namespace quicr
 {
-
 /**
  * @brief Encodes/Decodes a hex string from/into a list of unsigned integers
  *        values.
@@ -51,7 +52,7 @@ class HexEndec
      * @returns Hex string containing the provided values distributed according
      * to Dist in order.
      */
-    template<Unsigned... UInt_ts>
+    template<std::unsigned_integral... UInt_ts>
     static inline std::string Encode(UInt_ts... values)
     {
         static_assert(Size == (Dist + ...), "Total bits cannot exceed specified size");
@@ -62,10 +63,10 @@ class HexEndec
         return Encode(distribution, std::span<uint64_t>(vals));
     }
 
-    template<Unsigned... UInt_ts>
+    template<std::unsigned_integral... UInt_ts>
     static inline std::string Encode(std::span<uint16_t> distribution, UInt_ts... values)
     {
-        if(Size < std::accumulate(distribution.begin(), distribution.end(), 0))
+        if (Size < std::accumulate(distribution.begin(), distribution.end(), 0))
             throw std::invalid_argument("Total bits cannot exceed specified size");
 
         std::array<uint64_t, sizeof...(UInt_ts)> vals{ values... };
@@ -88,7 +89,7 @@ class HexEndec
 
         if constexpr (Size == sizeof(quicr::Name) * 8) return bits;
 
-        return "0x" + uint_to_hex(bits.bits<uint64_t>(0, Size));
+        return "0x" + utility::unsigned_to_hex(bits.bits<uint64_t>(0, Size));
     }
 
     /**
@@ -102,13 +103,13 @@ class HexEndec
      * @returns Structured binding of values decoded from hex string
      * corresponding in order to the size of Dist.
      */
-    template<Unsigned UInt_t = uint64_t>
+    template<std::unsigned_integral UInt_t = uint64_t>
     static constexpr std::array<UInt_t, sizeof...(Dist)> Decode(std::string_view hex)
     {
         return Decode<UInt_t>(quicr::Name(hex));
     }
 
-    template<Unsigned UInt_t = uint64_t>
+    template<std::unsigned_integral UInt_t = uint64_t>
     static constexpr std::array<UInt_t, sizeof...(Dist)> Decode(quicr::Name name)
     {
         static_assert(Size >= (Dist + ...), "Total bits cannot exceed specified size");
@@ -117,7 +118,7 @@ class HexEndec
         return Decode<sizeof...(Dist), UInt_t>(distribution, name);
     }
 
-    template<size_t N, Unsigned UInt_t = uint64_t>
+    template<size_t N, std::unsigned_integral UInt_t = uint64_t>
     static constexpr std::array<UInt_t, N> Decode(std::span<uint16_t> distribution, quicr::Name name)
     {
         const auto dist_size = distribution.size();
@@ -133,13 +134,13 @@ class HexEndec
         return result;
     }
 
-    template<Unsigned UInt_t = uint64_t>
+    template<std::unsigned_integral UInt_t = uint64_t>
     static inline std::vector<UInt_t> Decode(std::span<uint16_t> distribution, std::string_view hex)
     {
         return Decode(distribution, quicr::Name(hex));
     }
 
-    template<Unsigned UInt_t = uint64_t>
+    template<std::unsigned_integral UInt_t = uint64_t>
     static inline std::vector<UInt_t> Decode(std::span<uint16_t> distribution, quicr::Name name)
     {
         const auto dist_size = distribution.size();
