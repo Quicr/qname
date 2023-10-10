@@ -1,4 +1,4 @@
-find_package(benchmark REQUIRED)
+find_package(benchmark)
 if (NOT benchmark_FOUND)
     set(BENCHMARK_USE_BUNDLED_GTEST OFF)
     set(BENCHMARK_ENABLE_TESTING OFF)
