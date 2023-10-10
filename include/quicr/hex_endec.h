@@ -30,7 +30,7 @@ namespace quicr
  * 8bit respectively.
  *
  * @tparam Size The maximum size in bits of the Hex string
- * @tparam ...Dist The distribution of bits for each value passed.
+ * @tparam Dist The distribution of bits for each value passed.
  */
 template<uint16_t Size, uint16_t... Dist>
 class HexEndec
@@ -39,18 +39,17 @@ class HexEndec
     static_assert(Size <= sizeof(quicr::Name) * 8, "Size must not exceed sizeof(quicr::Name) * 8");
 
   public:
-    HexEndec() { static_assert(Size == (Dist + ...), "Total bits must be equal to Size"); }
+    constexpr HexEndec() noexcept { static_assert(Size == (Dist + ...), "Total bits must be equal to Size"); }
 
     /**
-     * @brief Encodes the last Dist bits of values in order according to
-     * distribution of Dist and builds a hex string that is the size in bits of
-     * Size.
+     * @brief Encodes the last Dist bits of values in order according to distribution
+     *        of Dist and builds a hex string that is the size in bits of Size.
      *
-     * @tparam ...UInt_ts The unsigned integer types to be passed.
-     * @param ...values The unsigned values to be encoded into the hex string.
+     * @tparam UInt_ts The unsigned integer types to be passed.
+     * @param values The unsigned values to be encoded into the hex string.
      *
      * @returns Hex string containing the provided values distributed according
-     * to Dist in order.
+     *          to Dist in order.
      */
     template<std::unsigned_integral... UInt_ts>
     static inline std::string Encode(UInt_ts... values)
@@ -101,7 +100,7 @@ class HexEndec
      *            corresponding to the size in bits of Size.
      *
      * @returns Structured binding of values decoded from hex string
-     * corresponding in order to the size of Dist.
+     *          corresponding in order to the size of Dist.
      */
     template<std::unsigned_integral UInt_t = uint64_t>
     static constexpr std::array<UInt_t, sizeof...(Dist)> Decode(std::string_view hex)

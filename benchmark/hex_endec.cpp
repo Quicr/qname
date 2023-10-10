@@ -1,74 +1,70 @@
 #include <benchmark/benchmark.h>
 
 #include <quicr/hex_endec.h>
+#include <quicr/name.h>
+
+#include <cstdint>
 
 static void HexEndec_Encode4x32_to_128(benchmark::State& state)
 {
-    quicr::HexEndec<128, 32, 32, 32, 32> format;
-    for (auto _ : state)
+    for ([[maybe_unused]] auto _ : state)
     {
-        format.Encode(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
+        quicr::HexEndec<128, 32, 32, 32, 32>::Encode(0xFFFFFFFFU, 0xFFFFFFFFU, 0xFFFFFFFFU, 0xFFFFFFFFU);
     }
 }
 
 static void HexEndec_Decode128_to_4x32(benchmark::State& state)
 {
-    quicr::HexEndec<128, 32, 32, 32, 32> format;
-    for (auto _ : state)
+    for ([[maybe_unused]] auto _ : state)
     {
-        format.Decode("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+        quicr::HexEndec<128, 32, 32, 32, 32>::Decode("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
     }
 }
 
 static void HexEndec_Encode4x16_to_64(benchmark::State& state)
 {
-    quicr::HexEndec<64, 16, 16, 16, 16> format;
-    for (auto _ : state)
+    for ([[maybe_unused]] auto _ : state)
     {
-        format.Encode(0xFFFFu, 0xFFFFu, 0xFFFFu, 0xFFFFu);
+        quicr::HexEndec<64, 16, 16, 16, 16>::Encode(0xFFFFU, 0xFFFFU, 0xFFFFU, 0xFFFFU);
     }
 }
 
 static void HexEndec_Decode64_to_4x16(benchmark::State& state)
 {
-    quicr::HexEndec<64, 16, 16, 16, 16> format;
-    for (auto _ : state)
+    for ([[maybe_unused]] auto _ : state)
     {
-        format.Decode("0xFFFFFFFFFFFFFFFF");
+        quicr::HexEndec<64, 16, 16, 16, 16>::Decode("0xFFFFFFFFFFFFFFFF");
     }
 }
 
 static void HexEndec_RealEncode(benchmark::State& state)
 {
-    quicr::HexEndec<128, 24, 8, 24, 8, 16, 48> format;
     const uint32_t orgId = 0x00A11CEE;
     const uint8_t appId = 0x00;
     const uint32_t confId = 0x00F00001;
-    const uint8_t mediaType = 0x00 | 0x1;
+    const uint8_t mediaType = 0x00U | 0x1U;
     const uint16_t clientId = 0xFFFF;
-    const uint64_t uniqueId = 0u;
-    for (auto _ : state)
+    const uint64_t uniqueId = 0U;
+    for ([[maybe_unused]] auto _ : state)
     {
-        format.Encode(orgId, appId, confId, mediaType, clientId, uniqueId);
+        quicr::HexEndec<128, 24, 8, 24, 8, 16, 48>::Encode(orgId, appId, confId, mediaType, clientId, uniqueId);
     }
 }
 
 static void HexEndec_RealDecode_Name(benchmark::State& state)
 {
-    quicr::HexEndec<128, 24, 8, 24, 8, 16, 48> format;
-    quicr::Name qname = 0xA11CEE00F00001000000000000000000_name;
-    for (auto _ : state)
+    constexpr quicr::Name qname = 0xA11CEE00F00001000000000000000000_name;
+    for ([[maybe_unused]] auto _ : state)
     {
-        [[maybe_unused]] auto __ = format.Decode(qname);
+        [[maybe_unused]] auto s = quicr::HexEndec<128, 24, 8, 24, 8, 16, 48>::Decode(qname);
     }
 }
 static void HexEndec_RealDecode_String(benchmark::State& state)
 {
-    quicr::HexEndec<128, 24, 8, 24, 8, 16, 48> format;
-    quicr::Name qname = 0xA11CEE00F00001000000000000000000_name;
-    for (auto _ : state)
+    constexpr quicr::Name qname = 0xA11CEE00F00001000000000000000000_name;
+    for ([[maybe_unused]] auto _ : state)
     {
-        [[maybe_unused]] auto __ = format.Decode(qname);
+        [[maybe_unused]] auto s = quicr::HexEndec<128, 24, 8, 24, 8, 16, 48>::Decode(qname);
     }
 }
 

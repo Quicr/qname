@@ -1,32 +1,37 @@
 #include <benchmark/benchmark.h>
 
-#include <qname>
+#include <quicr/name.h>
+
+#include <cstdint>
+#include <cstdlib>
+#include <string>
+#include <string_view>
 #include <vector>
 
 static void Name_ConstructFrom_String(benchmark::State& state)
 {
-    std::string str = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
-    for (auto _ : state)
+    const std::string str = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+    for ([[maybe_unused]] auto _ : state)
     {
-        [[maybe_unused]] quicr::Name __(str);
+        [[maybe_unused]] const quicr::Name n(str);
     }
 }
 
 static void Name_ConstructFrom_StringView(benchmark::State& state)
 {
-    std::string_view str = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
-    for (auto _ : state)
+    const std::string_view str = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+    for ([[maybe_unused]] auto _ : state)
     {
-        [[maybe_unused]] quicr::Name __(str);
+        [[maybe_unused]] const quicr::Name n(str);
     }
 }
 
 static void Name_ConstructFrom_ConstexprStringView(benchmark::State& state)
 {
     constexpr std::string_view str = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
-    for (auto _ : state)
+    for ([[maybe_unused]] auto _ : state)
     {
-        [[maybe_unused]] quicr::Name __(str);
+        [[maybe_unused]] const quicr::Name n(str);
     }
 }
 
@@ -35,40 +40,40 @@ static void Name_ConstructFrom_Vector(benchmark::State& state)
     std::vector<uint8_t> data = {
         0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     };
-    for (auto _ : state)
+    for ([[maybe_unused]] auto _ : state)
     {
-        [[maybe_unused]] quicr::Name __(data);
+        [[maybe_unused]] const quicr::Name n(data);
     }
 }
 
 static void Name_ConstructFrom_BytePointer(benchmark::State& state)
 {
-    std::vector<uint8_t> vec_data = {
+    const std::vector<uint8_t> vec_data = {
         0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     };
 
-    uint8_t* data = vec_data.data();
-    size_t length = vec_data.size();
+    const std::uint8_t* data = vec_data.data();
+    const std::size_t length = vec_data.size();
 
-    for (auto _ : state)
+    for ([[maybe_unused]] auto _ : state)
     {
-        [[maybe_unused]] quicr::Name __(data, length);
+        [[maybe_unused]] const quicr::Name n(data, length);
     }
 }
 
 static void Name_ConstructFrom_Copy(benchmark::State& state)
 {
-    quicr::Name name = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
-    for (auto _ : state)
+    constexpr const quicr::Name name = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
+    for ([[maybe_unused]] auto _ : state)
     {
-        [[maybe_unused]] quicr::Name __(name);
+        [[maybe_unused]] const quicr::Name n(name);
     }
 }
 
 static void Name_Arithmetic_LeftShift(benchmark::State& state)
 {
-    quicr::Name name = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
-    for (auto _ : state)
+    constexpr const quicr::Name name = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
+    for ([[maybe_unused]] auto _ : state)
     {
         name << 64;
     }
@@ -76,8 +81,8 @@ static void Name_Arithmetic_LeftShift(benchmark::State& state)
 
 static void Name_Arithmetic_RightShift(benchmark::State& state)
 {
-    quicr::Name name = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
-    for (auto _ : state)
+    constexpr const quicr::Name name = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
+    for ([[maybe_unused]] auto _ : state)
     {
         name >> 64;
     }
@@ -86,7 +91,7 @@ static void Name_Arithmetic_RightShift(benchmark::State& state)
 static void Name_Arithmetic_Add(benchmark::State& state)
 {
     quicr::Name name = 0x0_name;
-    for (auto _ : state)
+    for ([[maybe_unused]] auto _ : state)
     {
         ++name;
     }
@@ -95,7 +100,7 @@ static void Name_Arithmetic_Add(benchmark::State& state)
 static void Name_Arithmetic_Sub(benchmark::State& state)
 {
     quicr::Name name = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
-    for (auto _ : state)
+    for ([[maybe_unused]] auto _ : state)
     {
         --name;
     }
@@ -106,7 +111,7 @@ constexpr quicr::Name group_id_mask = 0x00000000000000000000111111110000_name;
 static void Name_RealArithmetic(benchmark::State& state)
 {
     quicr::Name name = 0xA11CEE00F00001000000000000000000_name;
-    for (auto _ : state)
+    for ([[maybe_unused]] auto _ : state)
     {
         name = (name & ~object_id_mask) | (++name & object_id_mask);
 
@@ -117,28 +122,28 @@ static void Name_RealArithmetic(benchmark::State& state)
 
 static void Name_ExtractBits(benchmark::State& state)
 {
-    quicr::Name name = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
-    for (auto _ : state)
+    constexpr quicr::Name name = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
+    for ([[maybe_unused]] auto _ : state)
     {
-        [[maybe_unused]] auto __ = name.bits(64, 64);
+        [[maybe_unused]] auto n = name.bits(64, 64);
     }
 }
 
 static void Name_ConvertTo_UInt64(benchmark::State& state)
 {
-    quicr::Name name = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
-    for (auto _ : state)
+    constexpr quicr::Name name = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
+    for ([[maybe_unused]] auto _ : state)
     {
-        [[maybe_unused]] auto __ = std::uint64_t(name);
+        [[maybe_unused]] auto n = std::uint64_t(name);
     }
 }
 
 static void Name_ConvertTo_String(benchmark::State& state)
 {
-    quicr::Name name = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
-    for (auto _ : state)
+    constexpr quicr::Name name = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
+    for ([[maybe_unused]] auto _ : state)
     {
-        [[maybe_unused]] std::string __ = name;
+        [[maybe_unused]] const std::string n = name;
     }
 }
 

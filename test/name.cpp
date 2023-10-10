@@ -2,6 +2,10 @@
 
 #include <quicr/name.h>
 
+#include <cstdint>
+#include <iterator>
+#include <string>
+#include <string_view>
 #include <type_traits>
 #include <vector>
 
@@ -20,10 +24,6 @@ TEST_CASE("quicr::Name Type Tests")
 
 TEST_CASE("quicr::Name Constructor Tests")
 {
-    quicr::Name val42(0x42_name);
-    quicr::Name hex42(0x42_name);
-    CHECK_EQ(val42, hex42);
-
     CHECK_EQ(0x1_name, 0x00000000000000000000000000000001_name);
 
     CHECK_LT(0x123_name, 0x124_name);
@@ -40,23 +40,23 @@ TEST_CASE("quicr::Name Constructor Tests")
 TEST_CASE("quicr::Name To Hex Tests")
 {
     {
-        std::string_view original_hex = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
-        quicr::Name name = original_hex;
+        constexpr std::string_view original_hex = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+        constexpr quicr::Name name = original_hex;
 
         CHECK_EQ(std::string(name), original_hex);
     }
     {
-        std::string_view original_hex = "0xFFFFFFFFFFFFFFFF0000000000000000";
-        quicr::Name name = original_hex;
+        constexpr std::string_view original_hex = "0xFFFFFFFFFFFFFFFF0000000000000000";
+        constexpr quicr::Name name = original_hex;
 
         CHECK_EQ(std::string(name), original_hex);
     }
     {
-        std::string_view long_hex = "0x0000000000000000FFFFFFFFFFFFFFFF";
-        quicr::Name long_name = long_hex;
+        constexpr std::string_view long_hex = "0x0000000000000000FFFFFFFFFFFFFFFF";
+        constexpr quicr::Name long_name = long_hex;
 
-        std::string_view short_hex = "0xFFFFFFFFFFFFFFFF";
-        quicr::Name not_short_name = short_hex;
+        constexpr std::string_view short_hex = "0xFFFFFFFFFFFFFFFF";
+        constexpr quicr::Name not_short_name = short_hex;
         CHECK_EQ(std::string(long_name), long_hex);
         CHECK_NE(std::string(not_short_name), short_hex);
         CHECK_EQ(long_name, not_short_name);
@@ -70,40 +70,44 @@ TEST_CASE("quicr::Name Bit Shifting Tests")
     CHECK_EQ((0x1234_name << 4), 0x12340_name);
 
     {
-        const quicr::Name unshifted_32bit = 0x123456789ABCDEFF00000000_name;
-        const quicr::Name shifted_32bit = 0x123456789ABCDEFF_name;
+        constexpr quicr::Name unshifted_32bit = 0x123456789ABCDEFF00000000_name;
+        constexpr quicr::Name shifted_32bit = 0x123456789ABCDEFF_name;
         CHECK_EQ((unshifted_32bit >> 32), shifted_32bit);
         CHECK_EQ((shifted_32bit << 32), unshifted_32bit);
     }
 
     {
-        quicr::Name unshifted_64bit = 0x123456789ABCDEFF123456789ABCDEFF_name;
-        quicr::Name shifted_64bit = 0x123456789ABCDEFF_name;
-        quicr::Name shifted_72bit = 0x123456789ABCDE_name;
+        constexpr quicr::Name unshifted_64bit = 0x123456789ABCDEFF123456789ABCDEFF_name;
+        constexpr quicr::Name shifted_64bit = 0x123456789ABCDEFF_name;
+        constexpr quicr::Name shifted_72bit = 0x123456789ABCDE_name;
         CHECK_EQ((unshifted_64bit >> 64), shifted_64bit);
         CHECK_EQ((unshifted_64bit >> 72), shifted_72bit);
         CHECK_EQ((shifted_64bit >> 8), shifted_72bit);
     }
 
     {
-        quicr::Name unshifted_64bit = 0x123456789ABCDEFF_name;
-        quicr::Name shifted_64bit = 0x123456789ABCDEFF0000000000000000_name;
-        quicr::Name shifted_72bit = 0x3456789ABCDEFF000000000000000000_name;
+        constexpr quicr::Name unshifted_64bit = 0x123456789ABCDEFF_name;
+        constexpr quicr::Name shifted_64bit = 0x123456789ABCDEFF0000000000000000_name;
+        constexpr quicr::Name shifted_72bit = 0x3456789ABCDEFF000000000000000000_name;
         CHECK_EQ((unshifted_64bit << 64), shifted_64bit);
         CHECK_EQ((unshifted_64bit << 72), shifted_72bit);
         CHECK_EQ((shifted_64bit << 8), shifted_72bit);
     }
 
     {
-        const quicr::Name unshifted_bits = 0x00000000000000000000000000000001_name;
+        constexpr quicr::Name unshifted_bits = 0x00000000000000000000000000000001_name;
         quicr::Name bits = unshifted_bits;
         for (int i = 0; i < 64; ++i)
+        {
             bits <<= 1;
+        }
 
         CHECK_EQ(bits, 0x00000000000000010000000000000000_name);
 
         for (int i = 0; i < 64; ++i)
+        {
             bits >>= 1;
+        }
 
         CHECK_EQ(bits, unshifted_bits);
     }
@@ -111,9 +115,9 @@ TEST_CASE("quicr::Name Bit Shifting Tests")
 
 TEST_CASE("quicr::Name Integer Arithmetic Tests")
 {
-    quicr::Name val42 = 0x42_name;
-    quicr::Name val41 = 0x41_name;
-    quicr::Name val43 = 0x43_name;
+    constexpr quicr::Name val42 = 0x42_name;
+    constexpr quicr::Name val41 = 0x41_name;
+    constexpr quicr::Name val43 = 0x43_name;
     CHECK_EQ(val42 + 1, val43);
     CHECK_EQ(val42 - 1, val41);
 
@@ -155,10 +159,10 @@ TEST_CASE("quicr::Name Name Arithmetic Tests")
 
 TEST_CASE("quicr::Name Bitwise Not Tests")
 {
-    quicr::Name zeros = 0x0_name;
-    quicr::Name ones = ~zeros;
+    constexpr quicr::Name zeros = 0x0_name;
+    constexpr quicr::Name ones = ~zeros;
 
-    quicr::Name expected_ones = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
+    constexpr quicr::Name expected_ones = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
     auto literal_ones = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF_name;
 
     CHECK_NE(ones, zeros);
@@ -168,40 +172,40 @@ TEST_CASE("quicr::Name Bitwise Not Tests")
 
 TEST_CASE("quicr::Name Full Byte Array Tests")
 {
-    const quicr::Name name_to_bytes = 0x10000000000000000000000000000000_name;
-    auto bytes_ptr = reinterpret_cast<uint8_t*>(const_cast<quicr::Name*>(&name_to_bytes));
+    constexpr quicr::Name name_to_bytes = 0x10000000000000000000000000000000_name;
+    const std::uint8_t* bytes_ptr = reinterpret_cast<const std::uint8_t*>(&name_to_bytes);
 
-    std::vector<uint8_t> byte_arr = { bytes_ptr, bytes_ptr + sizeof(quicr::Name) };
+    std::vector<uint8_t> byte_arr = { bytes_ptr, std::next(bytes_ptr, sizeof(quicr::Name)) };
     CHECK_FALSE(byte_arr.empty());
     CHECK_EQ(byte_arr.size(), 16);
 
-    quicr::Name name_from_bytes(byte_arr);
+    const quicr::Name name_from_bytes(byte_arr);
     CHECK_EQ(name_from_bytes, name_to_bytes);
 
-    quicr::Name name_from_byte_ptr(bytes_ptr, sizeof(quicr::Name));
+    const quicr::Name name_from_byte_ptr(bytes_ptr, sizeof(quicr::Name));
     CHECK_EQ(name_from_byte_ptr, name_to_bytes);
 }
 
 TEST_CASE("quicr::Name Medium Byte Array Tests")
 {
-    const quicr::Name long_name = 0x10000000010000000000000000000000_name;
-    const quicr::Name short_name = 0x1000000001_name;
+    constexpr quicr::Name long_name = 0x10000000010000000000000000000000_name;
+    constexpr quicr::Name short_name = 0x1000000001_name;
 
     std::vector<uint8_t> byte_arr = { 0x01, 0x00, 0x00, 0x00, 0x10 };
 
-    quicr::Name name_from_bytes(byte_arr);
+    const quicr::Name name_from_bytes(byte_arr);
     CHECK_NE(name_from_bytes, long_name);
     CHECK_EQ(name_from_bytes, short_name);
 }
 
 TEST_CASE("quicr::Name Short Byte Array Tests")
 {
-    const quicr::Name long_name = 0x10000000000000000000000000000000_name;
-    const quicr::Name short_name = 0x10_name;
+    constexpr quicr::Name long_name = 0x10000000000000000000000000000000_name;
+    constexpr quicr::Name short_name = 0x10_name;
 
     std::vector<uint8_t> byte_arr = { 0x10 };
 
-    quicr::Name name_from_bytes(byte_arr);
+    const quicr::Name name_from_bytes(byte_arr);
     CHECK_NE(name_from_bytes, long_name);
     CHECK_EQ(name_from_bytes, short_name);
 }
@@ -209,15 +213,15 @@ TEST_CASE("quicr::Name Short Byte Array Tests")
 TEST_CASE("quicr::Name Integer Byte Array Tests")
 {
     {
-        uint64_t i = 0x123456;
-        uint8_t* i_ptr = reinterpret_cast<uint8_t*>(&i);
-        quicr::Name name_from_bytes(i_ptr, 3);
+        constexpr std::uint64_t i = 0x123456;
+        const std::uint8_t* i_ptr = reinterpret_cast<const std::uint8_t*>(&i);
+        const quicr::Name name_from_bytes(i_ptr, 3);
         CHECK_EQ(name_from_bytes, 0x00000000000000000000000000123456_name);
     }
 
     {
         std::vector<uint8_t> byte_arr = { 0x56, 0x34, 0x12 };
-        quicr::Name name_from_bytes(byte_arr);
+        const quicr::Name name_from_bytes(byte_arr);
         CHECK_EQ(name_from_bytes, 0x00000000000000000000000000123456_name);
     }
 }
@@ -261,7 +265,7 @@ TEST_CASE("quicr::Name Logical Arithmetic Tests")
 
 TEST_CASE("quicr::Name Conversion Tests")
 {
-    quicr::Name name = 0x000000000000FFFFFFFFFFFFFFFFFFFF_name;
+    constexpr quicr::Name name = 0x000000000000FFFFFFFFFFFFFFFFFFFF_name;
 
     CHECK_EQ(std::uint8_t(name), 0xFF);
     CHECK_EQ(std::uint16_t(name), 0xFFFF);
@@ -273,7 +277,7 @@ TEST_CASE("quicr::Name Conversion Tests")
 
 TEST_CASE("quicr::Name Extract Bits Tests")
 {
-    quicr::Name name = 0x000000000000FFFFFFFF000000000000_name;
+    constexpr quicr::Name name = 0x000000000000FFFFFFFF000000000000_name;
 
     CHECK_EQ(name.bits<std::uint64_t>(48, 8), std::uint64_t(0xFF));
     CHECK_EQ(name.bits<std::uint64_t>(48, 16), std::uint64_t(0xFFFF));

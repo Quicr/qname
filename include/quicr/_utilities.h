@@ -8,6 +8,8 @@
 namespace quicr::utility
 {
 
+namespace
+{
 /**
  * @brief Converts a hexadecimal character to it's decimal value.
  *
@@ -16,7 +18,7 @@ namespace quicr::utility
  * @returns The decimal value of the provided character.
  */
 template<std::unsigned_integral UInt_t = std::uint64_t>
-static constexpr UInt_t hexchar_to_unsigned(char hex) noexcept
+constexpr UInt_t hexchar_to_unsigned(char hex) noexcept
 {
     if ('0' <= hex && hex <= '9')
         return hex - '0';
@@ -29,15 +31,14 @@ static constexpr UInt_t hexchar_to_unsigned(char hex) noexcept
 }
 
 /**
- * @brief Converts an unsigned integer decimal value into a hexidecimal
- * character.
+ * @brief Converts an unsigned integer decimal value into a hexidecimal character.
  *
  * @tparam UInt_t The unsigned integer type to convert from.
  * @param value The decimal value to convert.
  * @returns The hexadecimal character of the provided decimal value.
  */
 template<std::unsigned_integral UInt_t>
-static constexpr char unsigned_to_hexchar(UInt_t value) noexcept
+constexpr char unsigned_to_hexchar(UInt_t value) noexcept
 {
     if (value > 9) return value + 'A' - 10;
     return value + '0';
@@ -51,7 +52,7 @@ static constexpr char unsigned_to_hexchar(UInt_t value) noexcept
  * @returns The decimal value of the provided hexadecimal string.
  */
 template<std::unsigned_integral UInt_t>
-static constexpr UInt_t hex_to_unsigned(std::string_view hex) noexcept
+constexpr UInt_t hex_to_unsigned(std::string_view hex) noexcept
 {
     if (hex.starts_with("0x")) hex.remove_prefix(2);
 
@@ -88,4 +89,5 @@ std::string unsigned_to_hex(UInt_t value) noexcept
     return hex;
 }
 
+}
 }
