@@ -47,6 +47,14 @@ install(TARGETS ${PROJECT_NAME} EXPORT quicr::name)
 if(${PROJECT_NAME}_BUILD_TESTS OR ${PROJECT_NAME}_BUILD_BENCHMARKS)
     include(FetchContent)
     if(${PROJECT_NAME}_BUILD_TESTS)
+        FetchContent_Declare(
+            doctest
+            GIT_REPOSITORY https://github.com/doctest/doctest.git
+        )
+        FetchContent_MakeAvailable(doctest)
+
+        include(CTest)
+        enable_testing()
         add_subdirectory(test)
     endif()
 

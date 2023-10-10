@@ -1,12 +1,3 @@
-FetchContent_Declare(
-    doctest
-    GIT_REPOSITORY https://github.com/doctest/doctest.git
-)
-FetchContent_MakeAvailable(doctest)
-
-include(CTest)
-enable_testing()
-
 add_executable(${PROJECT_NAME}_test
                 main.cpp
                 name.cpp
