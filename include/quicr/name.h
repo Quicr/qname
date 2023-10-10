@@ -69,7 +69,7 @@ class Name
      * @brief Constructs a Name from a byte array pointer.
      *
      * @param data The byte array pointer to read from.
-     * @param length The length of the byte array pointer. Must NOT be greater.
+     * @param size The length of the byte array pointer. Must NOT be greater.
      *
      * Note: The ordering of the byte array MUST conform to the endianness of the machine.
      */

@@ -10,7 +10,7 @@ else()
 endif()
 
 project(qname
-        VERSION 1.0.0.0
+        VERSION 0.4.1
         DESCRIPTION "Quicr Name library"
         LANGUAGES CXX)
 
@@ -25,44 +25,32 @@ if(CLANG_TIDY)
     endif()
 endif()
 
-add_library(qname INTERFACE)
-add_library(quicr::name ALIAS qname)
-target_include_directories(qname INTERFACE
+add_library(${PROJECT_NAME} INTERFACE)
+add_library(quicr::name ALIAS ${PROJECT_NAME})
+
+set_target_properties(${PROJECT_NAME}
+    PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED YES
+        CXX_EXTENSIONS ON)
+
+target_include_directories(${PROJECT_NAME} INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
-install(TARGETS qname EXPORT quicr::name)
-
+install(TARGETS ${PROJECT_NAME} EXPORT quicr::name)
 
 #=============================================================================#
 # Build tests/benchmarks
 #=============================================================================#
 
-if(BUILD_TESTING OR BUILD_BENCHMARKING)
+if(${PROJECT_NAME}_BUILD_TESTS OR ${PROJECT_NAME}_BUILD_BENCHMARKS)
     include(FetchContent)
-endif()
+    if(${PROJECT_NAME}_BUILD_TESTS)
+        add_subdirectory(test)
+    endif()
 
-if(BUILD_TESTING AND qname_BUILD_TESTS)
-    FetchContent_Declare(
-        doctest
-        GIT_REPOSITORY https://github.com/doctest/doctest.git
-    )
-    FetchContent_MakeAvailable(doctest)
-
-    include(CTest)
-    enable_testing()
-    add_subdirectory(test)
-endif()
-
-if (BUILD_BENCHMARKING AND qname_BUILD_BENCHMARKS)
-    set(BENCHMARK_USE_BUNDLED_GTEST OFF)
-    set(BENCHMARK_ENABLE_TESTING OFF)
-    FetchContent_Declare(
-        benchmark
-        GIT_REPOSITORY https://github.com/google/benchmark.git
-        GIT_TAG main
-    )
-    FetchContent_MakeAvailable(benchmark)
-
-    add_subdirectory(benchmark)
+    if(${PROJECT_NAME}_BUILD_BENCHMARKS)
+        add_subdirectory(benchmark)
+    endif()
 endif()
