@@ -17,7 +17,7 @@ namespace
  * @param hex The hexadecimal character to convert.
  * @returns The decimal value of the provided character.
  */
-template<std::unsigned_integral UInt_t = std::uint64_t>
+template<std::unsigned_integral UInt_t>
 constexpr UInt_t hexchar_to_unsigned(char hex) noexcept
 {
     if ('0' <= hex && hex <= '9')
