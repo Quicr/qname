@@ -31,15 +31,6 @@ class Name
 {
     using uint_t = std::uint64_t;
 
-  private:
-    /**
-     * @brief Private constructor for creating a name from 2 unsigned integers.
-     *
-     * @param hi The high bits of the name.
-     * @param lo The low bits of the name.
-     */
-    constexpr explicit Name(uint_t hi, uint_t lo) noexcept : _lo{ lo }, _hi{ hi } {}
-
   public:
     Name() noexcept = default;
     constexpr Name(const Name& other) noexcept = default;
@@ -92,6 +83,9 @@ class Name
             std::memcpy(&_lo, data, size);
     }
 
+    constexpr explicit Name(uint_t hi, uint_t lo) noexcept : _lo{ lo }, _hi{ hi } {}
+
+
     /**
      * @brief Constructs a Name from a byte range.
      *
@@ -123,6 +117,10 @@ class Name
     explicit constexpr operator std::uint16_t() const noexcept { return static_cast<std::uint16_t>(_lo); }
     explicit constexpr operator std::uint32_t() const noexcept { return static_cast<std::uint32_t>(_lo); }
     explicit constexpr operator std::uint64_t() const noexcept { return _lo; }
+
+    uint64_t hi() {
+        return _hi;
+    }
 
     /*=======================================================================*/
     // Arithmetic Operators
@@ -281,11 +279,11 @@ class Name
     constexpr T bits(std::uint16_t from, std::uint16_t length = 1) const
     {
         if (length == 0) return 0;
+        auto l = sizeof(uint_t) * 8;
+        //if (length > l)
+        //    throw std::domain_error("length is greater than 64 bits, did you mean to use Name?");
 
-        if (length > sizeof(uint_t) * 8)
-            throw std::domain_error("length is greater than 64 bits, did you mean to use Name?");
-
-        return T((*this & (((Name(uint_t(0), uint_t(1)) << length) - 1) << from)) >> from);
+        return T((*this & (((Name(uint_t(0), uint_t(1)) << l) - 1) << from)) >> from);
     }
 
     /*=======================================================================*/
