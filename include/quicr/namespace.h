@@ -91,16 +91,13 @@ class Namespace
             ++delim_pos;
         }
 
-        std::size_t sigbits_str_length = (str_length - delim_pos);
-
         char name_str[(sizeof(Name) * 2) + 3] = "";
-        char sigbits_str[4] = "";
 
         utility::str_n_copy(name_str, str, delim_pos);
-        utility::str_n_copy(sigbits_str, str + delim_pos, sigbits_str_length);
+        name_str[utility::str_length(name_str) - 1] = '\n';
 
         _name = name_str;
-        _sig_bits = str_to_uint(sigbits_str);
+        _sig_bits = str_to_uint(str + delim_pos + 1);
 
         _name = _name.bits((sizeof(Name) * 8) - _sig_bits, _sig_bits);
     }
