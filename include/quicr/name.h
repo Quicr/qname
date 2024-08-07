@@ -2,22 +2,25 @@
 
 #include "_utilities.h"
 
-#include <concepts>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <istream>
 #include <ostream>
-#include <span>
 #include <stdexcept>
 #include <string>
+#if __cplusplus >= 202002L
+#include <concepts>
+#include <span>
 #include <string_view>
+#endif
 
 namespace quicr
 {
-
+#if __cplusplus >= 202002L
 template<typename T>
 concept UnsignedOrName = std::unsigned_integral<T> || std::is_same_v<T, class Name>;
+#endif
 
 /**
  * @brief Unsigned 128 bit number which can be created from strings or byte arrays.
@@ -45,7 +48,8 @@ class Name
     constexpr Name(const Name& other) noexcept = default;
     constexpr Name(Name&& other) noexcept = default;
 
-    constexpr Name(std::string_view hex_value) noexcept(false)
+#if __cplusplus >= 202002L
+    constexpr Name(std::string_view hex_value)
     {
         if (hex_value.starts_with("0x")) hex_value.remove_prefix(2);
 
@@ -64,6 +68,38 @@ class Name
             _lo = utility::hex_to_unsigned<uint_t>(hex_value.substr(0, hex_value.length()));
         }
     }
+#else
+    constexpr Name(const char* hex_value)
+        : _lo{0}, _hi{0}
+    {
+        if (hex_value[0] == '0' && hex_value[1] == 'x') hex_value = hex_value + 2;
+
+        const std::size_t length = utility::str_length(hex_value);
+
+        if (length > sizeof(Name) * 2)
+            throw std::invalid_argument("Hex string cannot be longer than " + std::to_string(sizeof(Name) * 2) +
+                                        " bytes");
+
+        if (length > sizeof(Name))
+        {
+            char first_half[sizeof(Name) + 1] = "";
+            char last_half[sizeof(Name) + 1] = "";
+            utility::str_n_copy(first_half, hex_value, length - sizeof(Name));
+            utility::str_n_copy(last_half, hex_value + length - sizeof(Name), sizeof(Name));
+
+            _hi = utility::hex_to_unsigned<uint_t>(first_half);
+            _lo = utility::hex_to_unsigned<uint_t>(last_half);
+        }
+        else
+        {
+            char hex[sizeof(Name) + 1] = "";
+            utility::str_n_copy(hex, hex_value, length);
+
+            _hi = 0;
+            _lo = utility::hex_to_unsigned<uint_t>(hex);
+        }
+    }
+#endif
 
     /**
      * @brief Constructs a Name from a byte array pointer.
@@ -73,7 +109,7 @@ class Name
      *
      * Note: The ordering of the byte array MUST conform to the endianness of the machine.
      */
-    Name(const std::uint8_t* data, std::size_t size) noexcept(false) : _lo{ 0 }, _hi{ 0 }
+    Name(const std::uint8_t* data, std::size_t size) : _lo{ 0 }, _hi{ 0 }
     {
         if (!data) throw std::invalid_argument("Byte array data must not be null");
 
@@ -92,20 +128,25 @@ class Name
             std::memcpy(&_lo, data, size);
     }
 
+#if __cplusplus >= 202002L
     /**
      * @brief Constructs a Name from a byte range.
      *
      * @param data The byte range to read from.
      */
-    Name(std::span<std::uint8_t> data) noexcept(false) : Name(data.data(), data.size()) {}
-
+    Name(std::span<std::uint8_t> data) : Name(data.data(), data.size()) {}
+#endif
     /*=======================================================================*/
     // Assignment Operators
     /*=======================================================================*/
 
     constexpr Name& operator=(const Name& other) noexcept = default;
     constexpr Name& operator=(Name&& other) noexcept = default;
-    constexpr Name& operator=(std::string_view hex) noexcept(false) { return *this = Name(hex); }
+#if __cplusplus >= 202002L
+    constexpr Name& operator=(std::string_view hex) { return *this = Name(hex); }
+#else
+    constexpr Name& operator=(const char* hex) { return *this = Name(hex); }
+#endif
 
     /*=======================================================================*/
     // Conversion Operators
@@ -277,8 +318,13 @@ class Name
      * @param length The number of bits to access. If length == 0, returns 1 bit.
      * @returns The requested bits.
      */
+#if __cplusplus >= 202002L
     template<UnsignedOrName T = Name>
     constexpr T bits(std::uint16_t from, std::uint16_t length = 1) const
+#else
+    template<typename T = Name, typename std::enable_if_t<std::is_integral_v<T> || std::is_same_v<T, Name>, bool> = true>
+    constexpr T bits(std::uint16_t from, std::uint16_t length = 1) const
+#endif
     {
         if (length == 0) return 0;
 
@@ -298,7 +344,7 @@ class Name
     {
         std::string hex;
         is >> hex;
-        name = hex;
+        name = hex.c_str();
         return is;
     }
 
@@ -334,4 +380,8 @@ constexpr Name Name::bits<Name>(std::uint16_t from, std::uint16_t length) const
  * @param hex The hexadecimal string to construct from.
  * @returns The newly constructed Name.
  */
+#if __cplusplus >= 202002L
 constexpr quicr::Name operator""_name(const char* hex) { return { std::string_view(hex) }; }
+#else
+constexpr quicr::Name operator""_name(const char* hex) { return quicr::Name{ hex }; }
+#endif

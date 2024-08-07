@@ -40,22 +40,39 @@ TEST_CASE("quicr::Name Constructor Tests")
 TEST_CASE("quicr::Name To Hex Tests")
 {
     {
+
+#if __cplusplus >= 202002L
         constexpr std::string_view original_hex = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+#else
+        constexpr const char* original_hex = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+#endif
         constexpr quicr::Name name = original_hex;
 
         CHECK_EQ(std::string(name), original_hex);
     }
     {
+#if __cplusplus >= 202002L
         constexpr std::string_view original_hex = "0xFFFFFFFFFFFFFFFF0000000000000000";
+#else
+        constexpr const char* original_hex = "0xFFFFFFFFFFFFFFFF0000000000000000";
+#endif
         constexpr quicr::Name name = original_hex;
 
         CHECK_EQ(std::string(name), original_hex);
     }
     {
+#if __cplusplus >= 202002L
         constexpr std::string_view long_hex = "0x0000000000000000FFFFFFFFFFFFFFFF";
+#else
+        constexpr const char* long_hex = "0x0000000000000000FFFFFFFFFFFFFFFF";
+#endif
         constexpr quicr::Name long_name = long_hex;
 
+#if __cplusplus >= 202002L
         constexpr std::string_view short_hex = "0xFFFFFFFFFFFFFFFF";
+#else
+        constexpr const char* short_hex = "0xFFFFFFFFFFFFFFFF";
+#endif
         constexpr quicr::Name not_short_name = short_hex;
         CHECK_EQ(std::string(long_name), long_hex);
         CHECK_NE(std::string(not_short_name), short_hex);
@@ -175,12 +192,14 @@ TEST_CASE("quicr::Name Full Byte Array Tests")
     constexpr quicr::Name name_to_bytes = 0x10000000000000000000000000000000_name;
     const std::uint8_t* bytes_ptr = reinterpret_cast<const std::uint8_t*>(&name_to_bytes);
 
+#if __cplusplus >= 202002L
     std::vector<uint8_t> byte_arr = { bytes_ptr, std::next(bytes_ptr, sizeof(quicr::Name)) };
     CHECK_FALSE(byte_arr.empty());
     CHECK_EQ(byte_arr.size(), 16);
 
     const quicr::Name name_from_bytes(byte_arr);
     CHECK_EQ(name_from_bytes, name_to_bytes);
+#endif
 
     const quicr::Name name_from_byte_ptr(bytes_ptr, sizeof(quicr::Name));
     CHECK_EQ(name_from_byte_ptr, name_to_bytes);
@@ -193,7 +212,11 @@ TEST_CASE("quicr::Name Medium Byte Array Tests")
 
     std::vector<uint8_t> byte_arr = { 0x01, 0x00, 0x00, 0x00, 0x10 };
 
+#if __cplusplus >= 202002L
     const quicr::Name name_from_bytes(byte_arr);
+#else
+    const quicr::Name name_from_bytes(byte_arr.data(), byte_arr.size());
+#endif
     CHECK_NE(name_from_bytes, long_name);
     CHECK_EQ(name_from_bytes, short_name);
 }
@@ -205,7 +228,11 @@ TEST_CASE("quicr::Name Short Byte Array Tests")
 
     std::vector<uint8_t> byte_arr = { 0x10 };
 
+#if __cplusplus >= 202002L
     const quicr::Name name_from_bytes(byte_arr);
+#else
+    const quicr::Name name_from_bytes(byte_arr.data(), byte_arr.size());
+#endif
     CHECK_NE(name_from_bytes, long_name);
     CHECK_EQ(name_from_bytes, short_name);
 }
@@ -221,7 +248,11 @@ TEST_CASE("quicr::Name Integer Byte Array Tests")
 
     {
         std::vector<uint8_t> byte_arr = { 0x56, 0x34, 0x12 };
+#if __cplusplus >= 202002L
         const quicr::Name name_from_bytes(byte_arr);
+#else
+        const quicr::Name name_from_bytes(byte_arr.data(), byte_arr.size());
+#endif
         CHECK_EQ(name_from_bytes, 0x00000000000000000000000000123456_name);
     }
 }

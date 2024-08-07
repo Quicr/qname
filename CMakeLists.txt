@@ -28,12 +28,6 @@ endif()
 add_library(${PROJECT_NAME} INTERFACE)
 add_library(quicr::name ALIAS ${PROJECT_NAME})
 
-set_target_properties(${PROJECT_NAME}
-    PROPERTIES
-        CXX_STANDARD 20
-        CXX_STANDARD_REQUIRED YES
-        CXX_EXTENSIONS ON)
-
 target_include_directories(${PROJECT_NAME} INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
