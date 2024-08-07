@@ -277,5 +277,9 @@ class namespace_map : public std::map<Namespace, T, namespace_comparator_wrapper
 
   public:
     using base_t::base_t;
+
+#if __cplusplus < 202002L
+    bool contains(const Namespace& ns) { return this->find(ns) != this->end(); }
+#endif
 };
 } // namespace quicr
