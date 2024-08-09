@@ -53,7 +53,7 @@ static void HexEndec_RealEncode(benchmark::State& state)
 
 static void HexEndec_RealDecode_Name(benchmark::State& state)
 {
-    constexpr quicr::Name qname = 0xA11CEE00F00001000000000000000000_name;
+    const quicr::Name qname = 0xA11CEE00F00001000000000000000000_name;
     for ([[maybe_unused]] auto _ : state)
     {
         [[maybe_unused]] auto s = quicr::HexEndec<128, 24, 8, 24, 8, 16, 48>::Decode(qname);
@@ -61,7 +61,7 @@ static void HexEndec_RealDecode_Name(benchmark::State& state)
 }
 static void HexEndec_RealDecode_String(benchmark::State& state)
 {
-    constexpr quicr::Name qname = 0xA11CEE00F00001000000000000000000_name;
+    const quicr::Name qname = 0xA11CEE00F00001000000000000000000_name;
     for ([[maybe_unused]] auto _ : state)
     {
         [[maybe_unused]] auto s = quicr::HexEndec<128, 24, 8, 24, 8, 16, 48>::Decode(qname);

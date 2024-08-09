@@ -65,6 +65,7 @@ class Namespace
      * @brief Constructs a namespace from a string.
      * @param str A string of the form '0xXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/X'.
      */
+#if __cplusplus >= 202002L
     constexpr Namespace(std::string_view str)
     {
         auto delim_pos = str.find_first_of('/');
@@ -77,6 +78,33 @@ class Namespace
     }
 
     constexpr Namespace& operator=(std::string_view hex) { return *this = Namespace(hex); }
+#else
+    constexpr Namespace(const char* str)
+        : _name(""), _sig_bits(0)
+    {
+        std::size_t delim_pos = 0;
+        std::size_t str_length = utility::str_length(str);
+
+        while (delim_pos < str_length)
+        {
+            if (str[delim_pos] == '/') break;
+            ++delim_pos;
+        }
+
+        char name_str[(sizeof(Name) * 2) + 3] = "";
+
+        utility::str_n_copy(name_str, str, delim_pos);
+        name_str[utility::str_length(name_str) - 1] = '\n';
+
+        _name = name_str;
+        _sig_bits = str_to_uint(str + delim_pos + 1);
+
+        _name = _name.bits((sizeof(Name) * 8) - _sig_bits, _sig_bits);
+    }
+
+    constexpr Namespace& operator=(const char* hex) { return *this = Namespace(hex); }
+#endif
+
 
     /**
      * @brief Checks if the given name falls within the namespace.
@@ -177,7 +205,7 @@ class Namespace
     {
         std::string hex;
         is >> hex;
-        ns = hex;
+        ns = hex.c_str();
         return is;
     }
 
@@ -249,5 +277,9 @@ class namespace_map : public std::map<Namespace, T, namespace_comparator_wrapper
 
   public:
     using base_t::base_t;
+
+#if __cplusplus < 202002L
+    bool contains(const Namespace& ns) { return this->find(ns) != this->end(); }
+#endif
 };
 } // namespace quicr

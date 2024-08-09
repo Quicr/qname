@@ -8,6 +8,7 @@
 #include <string_view>
 #include <vector>
 
+#if __cplusplus >= 202002L
 static void Name_ConstructFrom_String(benchmark::State& state)
 {
     const std::string str = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
@@ -34,6 +35,25 @@ static void Name_ConstructFrom_ConstexprStringView(benchmark::State& state)
         [[maybe_unused]] const quicr::Name n(str);
     }
 }
+#else
+static void Name_ConstructFrom_CString(benchmark::State& state)
+{
+    const std::string str = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+    for ([[maybe_unused]] auto _ : state)
+    {
+        [[maybe_unused]] const quicr::Name n(str.c_str());
+    }
+}
+
+static void Name_ConstructFrom_ConstexprCString(benchmark::State& state)
+{
+    constexpr const char* str = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+    for ([[maybe_unused]] auto _ : state)
+    {
+        [[maybe_unused]] const quicr::Name n(str);
+    }
+}
+#endif
 
 static void Name_ConstructFrom_Vector(benchmark::State& state)
 {
@@ -42,7 +62,7 @@ static void Name_ConstructFrom_Vector(benchmark::State& state)
     };
     for ([[maybe_unused]] auto _ : state)
     {
-        [[maybe_unused]] const quicr::Name n(data);
+        [[maybe_unused]] const quicr::Name n(data.data(), data.size());
     }
 }
 
@@ -147,9 +167,14 @@ static void Name_ConvertTo_String(benchmark::State& state)
     }
 }
 
+#if __cplusplus >= 202002L
 BENCHMARK(Name_ConstructFrom_String);
 BENCHMARK(Name_ConstructFrom_StringView);
 BENCHMARK(Name_ConstructFrom_ConstexprStringView);
+#else
+BENCHMARK(Name_ConstructFrom_CString);
+BENCHMARK(Name_ConstructFrom_ConstexprCString);
+#endif
 BENCHMARK(Name_ConstructFrom_Vector);
 BENCHMARK(Name_ConstructFrom_BytePointer);
 BENCHMARK(Name_ConstructFrom_Copy);

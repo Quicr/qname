@@ -11,9 +11,10 @@ if (NOT benchmark_FOUND)
 endif()
 
 add_executable(${PROJECT_NAME}_benchmark
-                name.cpp
-                namespace.cpp
-                hex_endec.cpp)
+    name.cpp
+    namespace.cpp
+    hex_endec.cpp
+)
 
 target_link_libraries(${PROJECT_NAME}_benchmark PRIVATE qname benchmark::benchmark benchmark::benchmark_main)
 target_include_directories(${PROJECT_NAME}_benchmark PRIVATE ${PROJECT_SOURCE_DIR}/src)
@@ -25,7 +26,7 @@ target_compile_options(${PROJECT_NAME}_benchmark
 
 set_target_properties(${PROJECT_NAME}_benchmark
     PROPERTIES
-        CXX_STANDARD 20
+        CXX_STANDARD 17
         CXX_STANDARD_REQUIRED YES
         CXX_EXTENSIONS ON)
 if(MSVC)

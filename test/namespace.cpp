@@ -19,10 +19,18 @@ TEST_CASE("quicr::Namespace Type Tests")
 TEST_CASE("quicr::Namespace Constructor Tests")
 {
     CHECK_NOTHROW(quicr::Namespace(0x11111111111111112222222222222200_name, 120));
+#if __cplusplus >= 202002L
     CHECK_NOTHROW(quicr::Namespace(std::string_view("0x11111111111111112222222222222200/120")));
+#else
+    CHECK_NOTHROW(quicr::Namespace("0x11111111111111112222222222222200/120"));
+#endif
 
     quicr::Namespace name_ns(0x11111111111111112222222222222200_name, 120);
+#if __cplusplus >= 202002L
     quicr::Namespace str_ns(std::string_view("0x11111111111111112222222222222200/120"));
+#else
+    quicr::Namespace str_ns("0x11111111111111112222222222222200/120");
+#endif
 
     CHECK_EQ(name_ns, str_ns);
 }
@@ -54,7 +62,11 @@ TEST_CASE("quicr::Namespace Contains Namespaces Test")
 
 TEST_CASE("quicr::Namespace String Constructor Test")
 {
+#if __cplusplus >= 202002L
     quicr::Namespace ns = std::string_view("0xA11CEE00000001010007000000000001/80");
+#else
+    quicr::Namespace ns = "0xA11CEE00000001010007000000000001/80";
+#endif
     CHECK_EQ(std::string(ns), "0xA11CEE00000001010007000000000000/80");
     CHECK_EQ(ns.name(), 0xA11CEE00000001010007000000000000_name);
     CHECK_EQ(ns.length(), 80);

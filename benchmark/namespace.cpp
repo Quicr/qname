@@ -15,6 +15,7 @@ static void Namespace_ConstructFrom_Name(benchmark::State& state)
     }
 }
 
+#if __cplusplus >= 202002L
 static void Namespace_ConstructFrom_String(benchmark::State& state)
 {
     const std::string str = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF/80";
@@ -41,6 +42,25 @@ static void Namespace_ConstructFrom_ConstexprStringView(benchmark::State& state)
         [[maybe_unused]] constexpr quicr::Namespace ns(str);
     }
 }
+#else
+static void Namespace_ConstructFrom_CString(benchmark::State& state)
+{
+    const char* str = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF/80";
+    for ([[maybe_unused]] auto _ : state)
+    {
+        [[maybe_unused]] const quicr::Namespace ns(str);
+    }
+}
+
+static void Namespace_ConstructFrom_ConstexprCString(benchmark::State& state)
+{
+    constexpr const char* str = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF/80";
+    for ([[maybe_unused]] auto _ : state)
+    {
+        [[maybe_unused]] constexpr quicr::Namespace ns(str);
+    }
+}
+#endif
 
 static void Namespace_ConvertTo_String(benchmark::State& state)
 {
@@ -52,7 +72,12 @@ static void Namespace_ConvertTo_String(benchmark::State& state)
 }
 
 BENCHMARK(Namespace_ConstructFrom_Name);
+#if __cplusplus >= 202002L
 BENCHMARK(Namespace_ConstructFrom_String);
 BENCHMARK(Namespace_ConstructFrom_StringView);
 BENCHMARK(Namespace_ConstructFrom_ConstexprStringView);
+#else
+BENCHMARK(Namespace_ConstructFrom_CString);
+BENCHMARK(Namespace_ConstructFrom_ConstexprCString);
+#endif
 BENCHMARK(Namespace_ConvertTo_String);

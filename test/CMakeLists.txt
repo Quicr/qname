@@ -1,8 +1,9 @@
 add_executable(${PROJECT_NAME}_test
-                main.cpp
-                name.cpp
-                namespace.cpp
-                hex_endec.cpp)
+    main.cpp
+    name.cpp
+    namespace.cpp
+    hex_endec.cpp
+)
 target_include_directories(${PROJECT_NAME}_test PRIVATE ${DOCTEST_INCLUDE_DIR})
 
 target_link_libraries(${PROJECT_NAME}_test PRIVATE qname doctest::doctest)
@@ -14,7 +15,7 @@ target_compile_options(${PROJECT_NAME}_test
 
 set_target_properties(${PROJECT_NAME}_test
     PROPERTIES
-        CXX_STANDARD 20
+        CXX_STANDARD 17
         CXX_STANDARD_REQUIRED YES
         CXX_EXTENSIONS ON)
 if(MSVC)
